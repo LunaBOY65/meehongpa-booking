@@ -1,40 +1,52 @@
-# สำหรับรับค่า Request และส่ง Response (UserCreate, UserRead) เพื่อความปลอดภัย ไม่ให้ส่ง Password Hash ออกไปหา Client
+# Schemas สำหรับรับและส่งข้อมูลระหว่าง Client และ Server (Pydantic Models)
 
 from datetime import datetime
-
-from pydantic import BaseModel, EmailStr
 from typing import Optional
 import uuid
+from pydantic import BaseModel, EmailStr
 
-# Schema สำหรับ Register (Frontend ส่งมา)
+# --- Schemas สำหรับ Auth & User ---
+
+# Schema สำหรับการลงทะเบียนผู้ใช้งานใหม่ (Register)
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
     full_name: str
     department: str
 
-# Schema สำหรับ Login (Frontend ส่งมา)
+# Schema สำหรับการเข้าสู่ระบบ (Login)
 class TokenRequest(BaseModel):
     email: str
     password: str
 
-# Schema สำหรับส่งข้อมูล User กลับไป (ห้ามมี password_hash!)
+# Schema สำหรับส่งข้อมูล User กลับไปยัง Client (ไม่ส่ง password_hash)
 class UserOut(BaseModel):
     id: uuid.UUID
     email: EmailStr
     full_name: str
-    department: Optional[str]
+    department: Optional[str] = None
     role: str
-    is_locked: bool
+    no_show_count: int = 0
+    is_locked: bool = False
+    created_at: Optional[datetime] = None
 
-# Schema สำหรับ Token Response
+# Schema สำหรับการอัปเดตข้อมูลผู้ใช้งาน (Admin)
+class UserUpdate(BaseModel):
+    full_name: Optional[str] = None
+    department: Optional[str] = None
+    role: Optional[str] = None
+    is_locked: Optional[bool] = None
+    no_show_count: Optional[int] = None
+
+# Schema สำหรับส่งคืน Token JWT
 class Token(BaseModel):
     access_token: str
     token_type: str
 
 
 # --- Schemas สำหรับ Room ---
-# ข้อมูลที่ต้องส่งมาตอนสร้างห้องใหม่
+
+# Schema สำหรับการสร้างห้องประชุมใหม่
 class RoomCreate(BaseModel):
     name: str
     capacity: int
@@ -42,7 +54,7 @@ class RoomCreate(BaseModel):
     floor: str
     requires_approval: bool = False
 
-# ข้อมูลสำหรับแก้ไขห้อง (ทุกช่องเป็น Optional ส่งมาเฉพาะฟิลด์ที่ต้องการแก้)
+# Schema สำหรับการอัปเดตห้องประชุม (เลือกเฉพาะบางฟิลด์)
 class RoomUpdate(BaseModel):
     name: Optional[str] = None
     capacity: Optional[int] = None
@@ -51,8 +63,80 @@ class RoomUpdate(BaseModel):
     requires_approval: Optional[bool] = None
     is_active: Optional[bool] = None
 
-# ข้อมูล Room ที่จะส่งกลับไปให้ Frontend
+# Schema สำหรับส่งข้อมูล Room กลับไปยัง Client
 class RoomOut(RoomCreate):
     id: uuid.UUID
     is_active: bool
     created_at: datetime
+
+
+# --- Schemas สำหรับ Booking ---
+
+# Schema สำหรับขอกดจองห้องประชุม
+class BookingCreate(BaseModel):
+    room_id: uuid.UUID
+    title: str
+    start_time: datetime
+    end_time: datetime
+
+# Schema สำหรับส่งข้อมูลการจองกลับไปยัง Client
+class BookingOut(BookingCreate):
+    id: uuid.UUID
+    user_id: uuid.UUID
+    status: str
+    check_in_pin: Optional[str] = None
+    checked_in_at: Optional[datetime] = None
+    rejection_reason: Optional[str] = None
+    cancellation_reason: Optional[str] = None
+    created_at: datetime
+
+# Schema สำหรับ Admin ปฏิเสธการจอง
+class BookingRejectRequest(BaseModel):
+    reason: str
+
+# Schema สำหรับยกเลิกการจอง
+class BookingCancelRequest(BaseModel):
+    reason: Optional[str] = None
+
+# Schema สำหรับการ Check-in ด้วย PIN
+class CheckInRequest(BaseModel):
+    booking_id: uuid.UUID
+    pin: str
+
+
+# --- Schemas สำหรับ Analytics ---
+
+# Schema สำหรับสรุปผลการจองประจำเดือน
+class AnalyticsSummaryOut(BaseModel):
+    month: int
+    year: int
+    total_reservations: int
+    completed_check_ins: int
+    cancellations: int
+
+# Schema สำหรับบันทึกการใช้งานห้องประชุมรายวัน
+class DailyUtilizationRecord(BaseModel):
+    date: str
+    total_booked_hours: float
+    utilization_percentage: float
+    booking_count: int
+
+# Schema สำหรับรายงานอัตราการใช้งานห้องประชุม
+class RoomUtilizationOut(BaseModel):
+    room_id: uuid.UUID
+    month: int
+    year: int
+    daily_data: list[DailyUtilizationRecord]
+
+# Schema สำหรับรายการผู้ใช้งานที่โดนล็อกหรือ No-show สูง
+class UserLockoutItem(BaseModel):
+    id: uuid.UUID
+    email: EmailStr
+    full_name: str
+    department: Optional[str] = None
+    no_show_count: int
+    is_locked: bool
+
+# Schema สำหรับส่งข้อมูลผู้ใช้งานโดนล็อกกลับไปยัง Client
+class UserLockoutOut(BaseModel):
+    locked_users: list[UserLockoutItem]

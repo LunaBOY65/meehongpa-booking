@@ -1,3 +1,4 @@
+import { apiClient } from "./api-client";
 import type {
   AnalyticsSummaryParams,
   AnalyticsSummaryResponse,
@@ -10,16 +11,25 @@ export const analyticsService = {
   getSummary: async (
     params: AnalyticsSummaryParams
   ): Promise<AnalyticsSummaryResponse> => {
-    void params;
-    throw new Error("Not implemented");
+    const query = new URLSearchParams({
+      month: params.month.toString(),
+      year: params.year.toString(),
+    });
+    return apiClient<AnalyticsSummaryResponse>(`/analytics/summary?${query.toString()}`);
   },
   getRoomUtilization: async (
     params: RoomUtilizationParams
   ): Promise<RoomUtilizationResponse> => {
-    void params;
-    throw new Error("Not implemented");
+    const query = new URLSearchParams({
+      room_id: params.room_id,
+      month: params.month.toString(),
+      year: params.year.toString(),
+    });
+    return apiClient<RoomUtilizationResponse>(
+      `/analytics/room-utilization?${query.toString()}`
+    );
   },
   getUserLockouts: async (): Promise<UserLockoutResponse> => {
-    throw new Error("Not implemented");
+    return apiClient<UserLockoutResponse>("/analytics/user-lockouts");
   },
 };

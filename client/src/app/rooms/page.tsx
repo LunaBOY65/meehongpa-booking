@@ -1,48 +1,81 @@
-// client/src/app/rooms/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { roomService } from "@/services/room.service";
-import RoomList from "@/components/rooms/RoomList";
-import type { Room } from "@/types";
+import { RoomFilter } from "@/components/rooms/RoomFilter";
+import { RoomList } from "@/components/rooms/RoomList";
+import type { Room, RoomFilterParams } from "@/types";
 
 export default function RoomsPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const handleFilterRooms = async (params?: RoomFilterParams) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await roomService.getRooms(params);
+      setRooms(data);
+    } catch (err: unknown) {
+      if (err instanceof Error) setError(err.message);
+      else setError("Failed to fetch rooms");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ดึงข้อมูลครั้งแรกเมื่อเปิดหน้าเว็บ
   useEffect(() => {
-    const fetchRooms = async () => {
+    let isMounted = true;
+    async function loadInitialRooms() {
       try {
-        setLoading(true);
         const data = await roomService.getRooms();
-        setRooms(data);
+        if (isMounted) setRooms(data);
       } catch (err: unknown) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError("ไม่สามารถโหลดข้อมูลห้องประชุมได้");
+        if (isMounted) {
+          setError(
+            err instanceof Error ? err.message : "Failed to fetch rooms",
+          );
         }
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
+    }
+    loadInitialRooms();
+    return () => {
+      isMounted = false;
     };
-
-    fetchRooms();
   }, []);
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">ห้องประชุมทั้งหมด</h1>
+    <div className="max-w-6xl mx-auto space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">
+            🚪 Meeting Rooms Catalog
+          </h1>
+          <p className="text-sm text-gray-500">
+            Browse available facilities and reserve time slots
+          </p>
+        </div>
       </div>
 
-      {loading && <p className="text-gray-500">กำลังโหลดข้อมูลห้อง...</p>}
+      <RoomFilter onFilterChange={handleFilterRooms} />
+
       {error && (
-        <div className="p-3 bg-red-100 text-red-700 rounded mb-4">{error}</div>
+        <div className="p-3 bg-red-100 text-red-700 text-sm rounded">
+          {error}
+        </div>
       )}
 
-      {!loading && !error && <RoomList rooms={rooms} />}
+      {loading ? (
+        <div className="p-8 text-center text-gray-500">
+          Loading meeting rooms...
+        </div>
+      ) : (
+        <RoomList rooms={rooms} />
+      )}
     </div>
   );
 }

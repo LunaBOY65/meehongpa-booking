@@ -1,3 +1,9 @@
+import { RegisterForm } from "@/components/auth/RegisterForm";
+
 export default function RegisterPage() {
-  return null;
+  return (
+    <div className="py-12">
+      <RegisterForm />
+    </div>
+  );
 }
