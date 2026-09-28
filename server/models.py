@@ -1,10 +1,8 @@
 from enum import Enum
-from pyclbr import Class
 from typing import Optional
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import table, true
 from sqlmodel import Field, SQLModel
 
 
@@ -30,7 +28,7 @@ class UserRole(str, Enum):
     ADMIN = "ADMIN"
     MEMBER = "MEMBER"
 
-class User(SQLModel,table=true):
+class User(SQLModel, table=True):
     __tablename__: str = "users"
 
     id: Optional[uuid.UUID] = Field(
