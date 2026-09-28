@@ -6,6 +6,7 @@ import { BookingApprovalTable } from "@/components/bookings/BookingApprovalTable
 import { BookingApproveModal } from "@/components/bookings/BookingApproveModal";
 import { BookingRejectModal } from "@/components/bookings/BookingRejectModal";
 import type { Booking } from "@/types";
+import { Loader2, AlertCircle } from "lucide-react";
 
 export default function AdminBookingsPage() {
   const [pendingBookings, setPendingBookings] = useState<Booking[]>([]);
@@ -24,7 +25,7 @@ export default function AdminBookingsPage() {
       setPendingBookings(data);
     } catch (err: unknown) {
       if (err instanceof Error) setError(err.message);
-      else setError("Failed to fetch pending bookings");
+      else setError("Failed to fetch pending requests");
     } finally {
       setLoading(false);
     }
@@ -57,14 +58,22 @@ export default function AdminBookingsPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-800">✅ Booking Approvals Queue</h1>
-        <p className="text-sm text-gray-500">Review pending room reservation requests requiring admin authorization</p>
+        <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Booking Approvals Queue</h1>
+        <p className="text-xs text-zinc-500 mt-0.5">Authorize or decline room reservations that require administrative confirmation</p>
       </div>
 
-      {error && <div className="p-3 bg-red-100 text-red-700 text-sm rounded">{error}</div>}
+      {error && (
+        <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-2.5 text-xs text-rose-800">
+          <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
 
       {loading ? (
-        <div className="p-8 text-center text-gray-500">Loading pending requests...</div>
+        <div className="p-16 flex items-center justify-center text-zinc-400 gap-2 text-xs">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>Loading approval queue...</span>
+        </div>
       ) : (
         <BookingApprovalTable
           bookings={pendingBookings}

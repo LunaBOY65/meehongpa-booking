@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Meeting Room Booking Platform",
-  description: "FastAPI + Next.js Meeting Room Booking System",
+  title: "RoomDesk — Modern Meeting Room Management",
+  description: "Seamless meeting room reservations, kiosk check-in, and facility analytics",
 };
 
 export default function RootLayout({
@@ -29,11 +29,13 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-slate-100 text-gray-900">
+      <body className="min-h-full flex flex-col bg-zinc-50/60 text-zinc-900 font-sans">
         <Navbar />
         <div className="flex flex-1">
           <Sidebar />
-          <main className="flex-1 p-6 overflow-y-auto">{children}</main>
+          <main className="flex-1 p-6 sm:p-8 max-w-7xl overflow-x-hidden">
+            {children}
+          </main>
         </div>
       </body>
     </html>

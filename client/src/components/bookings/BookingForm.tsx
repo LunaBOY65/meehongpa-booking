@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { CreateBookingRequest } from "@/types";
+import { Loader2, AlertCircle, CalendarPlus } from "lucide-react";
 
 interface BookingFormProps {
   roomId: string;
@@ -44,53 +45,69 @@ export function BookingForm({ roomId, onSuccess, onSubmitBooking }: BookingFormP
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white border rounded-lg p-5 shadow-sm space-y-4">
-      <h2 className="text-lg font-bold text-gray-800 border-b pb-2">📝 Reserve This Room</h2>
+    <form onSubmit={handleSubmit} className="bg-white border border-zinc-200/90 rounded-xl p-5 sm:p-6 shadow-xs space-y-4">
+      <div className="flex items-center gap-2 pb-3 border-b border-zinc-100">
+        <CalendarPlus className="w-4 h-4 text-zinc-700" />
+        <h2 className="text-base font-semibold tracking-tight text-zinc-900">Reserve Room</h2>
+      </div>
 
-      {error && <div className="p-2 bg-red-100 text-red-700 text-sm rounded">{error}</div>}
+      {error && (
+        <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-start gap-2 text-xs text-rose-800">
+          <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+          <span>{error}</span>
+        </div>
+      )}
 
       <div>
-        <label className="block text-sm text-gray-700 mb-1">Meeting Title</label>
+        <label className="block text-xs font-medium text-zinc-700 mb-1.5">
+          Meeting Title <span className="text-rose-500">*</span>
+        </label>
         <input
           type="text"
           required
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Weekly Team Sync"
-          className="w-full border px-3 py-2 rounded text-sm text-gray-900"
+          placeholder="e.g. Q4 Sprint Planning"
+          className="w-full px-3 py-2 text-sm bg-white border border-zinc-200 rounded-md text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors"
         />
       </div>
 
       <div>
-        <label className="block text-sm text-gray-700 mb-1">Date</label>
+        <label className="block text-xs font-medium text-zinc-700 mb-1.5">
+          Date <span className="text-rose-500">*</span>
+        </label>
         <input
           type="date"
           required
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="w-full border px-3 py-2 rounded text-sm text-gray-900"
+          className="w-full px-3 py-2 text-sm bg-white border border-zinc-200 rounded-md text-zinc-900 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors"
         />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm text-gray-700 mb-1">Start Time</label>
+          <label className="block text-xs font-medium text-zinc-700 mb-1.5">
+            Start Time <span className="text-rose-500">*</span>
+          </label>
           <input
             type="time"
             required
             value={startTimeStr}
             onChange={(e) => setStartTimeStr(e.target.value)}
-            className="w-full border px-3 py-2 rounded text-sm text-gray-900"
+            className="w-full px-3 py-2 text-sm bg-white border border-zinc-200 rounded-md text-zinc-900 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors"
           />
         </div>
         <div>
-          <label className="block text-sm text-gray-700 mb-1">End Time</label>
+          <label className="block text-xs font-medium text-zinc-700 mb-1.5">
+            End Time <span className="text-rose-500">*</span>
+          </label>
           <input
             type="time"
             required
             value={endTimeStr}
             onChange={(e) => setEndTimeStr(e.target.value)}
-            className="w-full border px-3 py-2 rounded text-sm text-gray-900"
+            className="w-full px-3 py-2 text-sm bg-white border border-zinc-200 rounded-md text-zinc-900 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors"
           />
         </div>
       </div>
@@ -98,9 +115,10 @@ export function BookingForm({ roomId, onSuccess, onSubmitBooking }: BookingFormP
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded text-sm font-semibold disabled:bg-gray-400 mt-2"
+        className="w-full mt-2 flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-medium text-white bg-zinc-900 hover:bg-zinc-800 rounded-md disabled:bg-zinc-300 disabled:cursor-not-allowed transition-colors shadow-xs"
       >
-        {loading ? "Submitting Request..." : "Confirm Booking"}
+        {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+        <span>{loading ? "Confirming Reservation..." : "Confirm Reservation"}</span>
       </button>
     </form>
   );

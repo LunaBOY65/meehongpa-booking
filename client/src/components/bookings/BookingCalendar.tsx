@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Booking } from "@/types";
+import { Calendar, Clock, Lock, CheckCircle2 } from "lucide-react";
 
 interface BookingCalendarProps {
   bookings: Booking[];
@@ -22,24 +23,27 @@ export function BookingCalendar({ bookings, selectedDate, onDateChange }: Bookin
   const hours = Array.from({ length: 11 }, (_, i) => i + 8);
 
   return (
-    <div className="bg-white border rounded-lg p-5 shadow-sm mb-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <div className="bg-white border border-zinc-200/90 rounded-xl p-5 sm:p-6 shadow-xs mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-5 border-b border-zinc-100">
         <div>
-          <h2 className="text-lg font-bold text-gray-800">📅 Room Schedule Timeline</h2>
-          <p className="text-xs text-gray-500">View reservations for the selected day</p>
+          <h2 className="text-base font-semibold tracking-tight text-zinc-900 flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-zinc-500" />
+            Schedule Timeline
+          </h2>
+          <p className="text-xs text-zinc-500 mt-0.5">Availability breakdown for 08:00 – 19:00</p>
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-xs font-medium text-gray-700">Select Date:</label>
+          <label className="text-xs font-medium text-zinc-600">Date:</label>
           <input
             type="date"
             value={date}
             onChange={handleDateSubmit}
-            className="border px-3 py-1.5 rounded text-sm text-gray-900"
+            className="px-2.5 py-1.5 text-xs bg-zinc-50/50 border border-zinc-200 rounded-md text-zinc-900 focus:outline-none focus:border-zinc-900 focus:bg-white focus:ring-1 focus:ring-zinc-900 transition-colors"
           />
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-1.5 pt-4">
         {hours.map((hour) => {
           const slotStart = new Date(`${date}T${hour.toString().padStart(2, "0")}:00:00Z`);
           const slotEnd = new Date(`${date}T${(hour + 1).toString().padStart(2, "0")}:00:00Z`);
@@ -53,27 +57,32 @@ export function BookingCalendar({ bookings, selectedDate, onDateChange }: Bookin
           const isOccupied = matchingBookings.length > 0;
 
           return (
-            <div key={hour} className="flex items-center gap-4 border-b pb-2 text-sm">
-              <span className="w-16 font-mono text-xs text-gray-500 font-semibold">
+            <div key={hour} className="flex items-center gap-3 text-xs py-1">
+              <span className="w-12 font-mono text-[11px] text-zinc-400 font-medium text-right shrink-0">
                 {hour.toString().padStart(2, "0")}:00
               </span>
               <div
-                className={`flex-1 p-2 rounded text-xs transition-colors ${
+                className={`flex-1 px-3 py-2 rounded-md transition-all ${
                   isOccupied
-                    ? "bg-red-100 text-red-800 border border-red-200 font-medium"
-                    : "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                    ? "bg-rose-50/80 border border-rose-200/80 text-rose-900 font-medium"
+                    : "bg-zinc-50 hover:bg-zinc-100/70 border border-zinc-150 text-zinc-600"
                 }`}
               >
                 {isOccupied ? (
-                  <div>
-                    {matchingBookings.map((mb) => (
-                      <span key={mb.id} className="block">
-                        🔒 Booked: <strong>{mb.title}</strong> ({new Date(mb.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(mb.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
-                      </span>
-                    ))}
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5 truncate">
+                      <Lock className="w-3 h-3 text-rose-600 shrink-0" />
+                      <span className="truncate">{matchingBookings.map((mb) => mb.title).join(", ")}</span>
+                    </div>
+                    <span className="text-[10px] text-rose-700 bg-rose-100/70 px-1.5 py-0.2 rounded font-mono shrink-0">
+                      Reserved
+                    </span>
                   </div>
                 ) : (
-                  <span>✅ Available</span>
+                  <div className="flex items-center gap-1.5 text-zinc-400">
+                    <CheckCircle2 className="w-3 h-3 text-zinc-400" />
+                    <span>Available</span>
+                  </div>
                 )}
               </div>
             </div>

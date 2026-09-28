@@ -1,6 +1,7 @@
 "use client";
 
 import type { Booking } from "@/types";
+import { Calendar, Clock, KeyRound, AlertCircle, CheckCircle2, XCircle, RotateCcw } from "lucide-react";
 
 interface BookingListProps {
   bookings: Booking[];
@@ -11,8 +12,14 @@ interface BookingListProps {
 export function BookingList({ bookings, onViewDetail, onCancel }: BookingListProps) {
   if (bookings.length === 0) {
     return (
-      <div className="p-8 text-center border rounded-lg bg-gray-50 text-gray-500">
-        ไม่มีรายการจองห้องประชุม
+      <div className="bg-white border border-zinc-200 rounded-xl p-12 text-center">
+        <div className="w-10 h-10 bg-zinc-100 rounded-full flex items-center justify-center mx-auto mb-3 text-zinc-400">
+          <Calendar className="w-5 h-5" />
+        </div>
+        <h3 className="text-sm font-semibold text-zinc-900">No reservations found</h3>
+        <p className="text-xs text-zinc-500 mt-1 max-w-sm mx-auto">
+          You have no active or historical meeting room bookings in this workspace.
+        </p>
       </div>
     );
   }
@@ -20,17 +27,46 @@ export function BookingList({ bookings, onViewDetail, onCancel }: BookingListPro
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "APPROVED":
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded bg-green-100 text-green-800">APPROVED</span>;
+        return (
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">
+            <CheckCircle2 className="w-3 h-3" />
+            Confirmed
+          </span>
+        );
       case "PENDING":
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded bg-yellow-100 text-yellow-800">PENDING APPROVAL</span>;
+        return (
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full">
+            <Clock className="w-3 h-3" />
+            Pending Approval
+          </span>
+        );
       case "CHECKED_IN":
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded bg-blue-100 text-blue-800">CHECKED IN</span>;
+        return (
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full">
+            <CheckCircle2 className="w-3 h-3" />
+            Checked In
+          </span>
+        );
       case "REJECTED":
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded bg-red-100 text-red-800">REJECTED</span>;
+        return (
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium bg-rose-50 text-rose-700 border border-rose-200 px-2 py-0.5 rounded-full">
+            <XCircle className="w-3 h-3" />
+            Declined
+          </span>
+        );
       case "CANCELLED":
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded bg-gray-100 text-gray-600">CANCELLED</span>;
+        return (
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium bg-zinc-100 text-zinc-600 border border-zinc-200 px-2 py-0.5 rounded-full">
+            <RotateCcw className="w-3 h-3" />
+            Cancelled
+          </span>
+        );
       default:
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded bg-gray-100 text-gray-800">{status}</span>;
+        return (
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium bg-zinc-100 text-zinc-700 px-2 py-0.5 rounded-full">
+            {status}
+          </span>
+        );
     }
   };
 
@@ -43,40 +79,51 @@ export function BookingList({ bookings, onViewDetail, onCancel }: BookingListPro
         return (
           <div
             key={booking.id}
-            className="bg-white border rounded-lg p-4 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+            className="bg-white border border-zinc-200/90 rounded-xl p-4 sm:p-5 shadow-xs hover:border-zinc-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
           >
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <h3 className="font-bold text-gray-900">{booking.title}</h3>
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h3 className="text-sm font-semibold text-zinc-900 tracking-tight">{booking.title}</h3>
                 {getStatusBadge(booking.status)}
               </div>
-              <p className="text-sm text-gray-600">
-                📅 {startDate.toLocaleDateString("th-TH")} | 🕒{" "}
-                {startDate.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })} -{" "}
-                {endDate.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}
-              </p>
+
+              <div className="flex items-center gap-3 text-xs text-zinc-500 flex-wrap">
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-zinc-400" />
+                  {startDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-zinc-400" />
+                  {startDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} –{" "}
+                  {endDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              </div>
+
               {booking.check_in_pin && (
-                <p className="text-sm mt-1 text-blue-700 font-mono font-bold">
-                  🔑 Check-In PIN: {booking.check_in_pin}
-                </p>
+                <div className="inline-flex items-center gap-1.5 pt-1">
+                  <span className="text-[11px] font-medium text-zinc-500">Access PIN:</span>
+                  <span className="font-mono text-xs font-semibold px-2 py-0.5 bg-zinc-100 border border-zinc-200 text-zinc-900 rounded tracking-wider">
+                    {booking.check_in_pin}
+                  </span>
+                </div>
               )}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 self-start sm:self-center">
               {onViewDetail && (
                 <button
                   onClick={() => onViewDetail(booking)}
-                  className="px-3 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded font-medium"
+                  className="px-3 py-1.5 text-xs font-medium text-zinc-700 hover:text-zinc-900 bg-white hover:bg-zinc-50 border border-zinc-200 rounded-md transition-colors"
                 >
-                  Details
+                  View Details
                 </button>
               )}
               {onCancel && (booking.status === "APPROVED" || booking.status === "PENDING") && (
                 <button
                   onClick={() => onCancel(booking)}
-                  className="px-3 py-1.5 text-xs bg-red-600 hover:bg-red-700 text-white rounded font-medium"
+                  className="px-3 py-1.5 text-xs font-medium text-rose-600 hover:text-rose-700 bg-white hover:bg-rose-50 border border-zinc-200 hover:border-rose-200 rounded-md transition-colors"
                 >
-                  Cancel Booking
+                  Cancel
                 </button>
               )}
             </div>

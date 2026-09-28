@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import type { Room, CreateRoomRequest, UpdateRoomRequest } from "@/types";
+import { X, Loader2, AlertCircle, Building2 } from "lucide-react";
 
 interface RoomFormModalProps {
   room: Room | null;
@@ -69,111 +70,139 @@ export function RoomFormModal({ room, isOpen, onClose, onSave }: RoomFormModalPr
       onClose();
     } catch (err: unknown) {
       if (err instanceof Error) setError(err.message);
-      else setError("Failed to save room");
+      else setError("Failed to save room details");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-lg">
-        <h2 className="text-lg font-bold mb-4 text-gray-800">
-          {room ? "Edit Meeting Room" : "Add New Meeting Room"}
-        </h2>
-        {error && <div className="p-2 bg-red-100 text-red-700 text-sm rounded mb-4">{error}</div>}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-xs">
+      <div className="bg-white rounded-xl border border-zinc-200 shadow-xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100">
+          <div className="flex items-center gap-2">
+            <Building2 className="w-4 h-4 text-zinc-600" />
+            <h2 className="text-base font-semibold text-zinc-900">
+              {room ? "Edit Meeting Room" : "Add Meeting Room"}
+            </h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1 rounded-md text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <div className="mx-6 mt-4 p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-2 text-xs text-rose-800">
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm text-gray-700 mb-1">Room Name</label>
+            <label className="block text-xs font-medium text-zinc-700 mb-1.5">
+              Room Name <span className="text-rose-500">*</span>
+            </label>
             <input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Boardroom A"
-              className="w-full border px-3 py-2 rounded text-sm text-gray-900"
+              placeholder="e.g. Executive Boardroom 4A"
+              className="w-full px-3 py-2 text-sm bg-white border border-zinc-200 rounded-md text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors"
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-sm text-gray-700 mb-1">Capacity</label>
+              <label className="block text-xs font-medium text-zinc-700 mb-1.5">
+                Capacity <span className="text-rose-500">*</span>
+              </label>
               <input
                 type="number"
                 min="1"
                 required
                 value={capacity}
                 onChange={(e) => setCapacity(Number(e.target.value))}
-                className="w-full border px-3 py-2 rounded text-sm text-gray-900"
+                className="w-full px-3 py-2 text-sm bg-white border border-zinc-200 rounded-md text-zinc-900 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors text-right"
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-700 mb-1">Building</label>
+              <label className="block text-xs font-medium text-zinc-700 mb-1.5">
+                Building <span className="text-rose-500">*</span>
+              </label>
               <input
                 type="text"
                 required
                 value={building}
                 onChange={(e) => setBuilding(e.target.value)}
                 placeholder="Tower A"
-                className="w-full border px-3 py-2 rounded text-sm text-gray-900"
+                className="w-full px-3 py-2 text-sm bg-white border border-zinc-200 rounded-md text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors"
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-700 mb-1">Floor</label>
+              <label className="block text-xs font-medium text-zinc-700 mb-1.5">
+                Floor <span className="text-rose-500">*</span>
+              </label>
               <input
                 type="text"
                 required
                 value={floor}
                 onChange={(e) => setFloor(e.target.value)}
                 placeholder="4"
-                className="w-full border px-3 py-2 rounded text-sm text-gray-900"
+                className="w-full px-3 py-2 text-sm bg-white border border-zinc-200 rounded-md text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors"
               />
             </div>
           </div>
 
-          <div className="flex items-center gap-2 pt-2">
-            <input
-              type="checkbox"
-              id="requires_approval"
-              checked={requiresApproval}
-              onChange={(e) => setRequiresApproval(e.target.checked)}
-              className="w-4 h-4 rounded text-blue-600"
-            />
-            <label htmlFor="requires_approval" className="text-sm text-gray-700">
-              Requires Admin Approval
-            </label>
-          </div>
-
-          {room && (
-            <div className="flex items-center gap-2">
+          <div className="pt-2 space-y-2.5">
+            <label className="flex items-start gap-2.5 cursor-pointer select-none">
               <input
                 type="checkbox"
-                id="is_active"
-                checked={isActive}
-                onChange={(e) => setIsActive(e.target.checked)}
-                className="w-4 h-4 rounded text-blue-600"
+                checked={requiresApproval}
+                onChange={(e) => setRequiresApproval(e.target.checked)}
+                className="w-4 h-4 mt-0.5 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
               />
-              <label htmlFor="is_active" className="text-sm text-gray-700">
-                Is Active (Open for Booking)
-              </label>
-            </div>
-          )}
+              <div className="text-xs">
+                <span className="font-medium text-zinc-900 block">Require Admin Approval</span>
+                <span className="text-zinc-500">Reservations will stay PENDING until confirmed by an admin.</span>
+              </div>
+            </label>
 
-          <div className="flex justify-end gap-2 border-t pt-4 mt-4">
+            {room && (
+              <label className="flex items-start gap-2.5 cursor-pointer select-none pt-1">
+                <input
+                  type="checkbox"
+                  checked={isActive}
+                  onChange={(e) => setIsActive(e.target.checked)}
+                  className="w-4 h-4 mt-0.5 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                />
+                <div className="text-xs">
+                  <span className="font-medium text-zinc-900 block">Facility Active</span>
+                  <span className="text-zinc-500">Uncheck to disable booking for maintenance.</span>
+                </div>
+              </label>
+            )}
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-4 border-t border-zinc-100">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border text-gray-700 text-sm rounded hover:bg-gray-100"
+              className="px-3.5 py-2 text-xs font-medium text-zinc-700 hover:bg-zinc-100 rounded-md border border-zinc-200 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:bg-gray-400"
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-zinc-900 hover:bg-zinc-800 rounded-md disabled:bg-zinc-300 disabled:cursor-not-allowed transition-colors shadow-xs"
             >
-              {loading ? "Saving..." : room ? "Update Room" : "Create Room"}
+              {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              <span>{room ? "Update Room" : "Create Room"}</span>
             </button>
           </div>
         </form>

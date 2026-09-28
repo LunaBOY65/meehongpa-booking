@@ -5,7 +5,8 @@ import { userService } from "@/services/user.service";
 import { UserTable } from "@/components/users/UserTable";
 import { UserEditModal } from "@/components/users/UserEditModal";
 import { UserDeleteDialog } from "@/components/users/UserDeleteDialog";
-import type { User, UserRole, UpdateUserRequest } from "@/types";
+import type { User, UpdateUserRequest } from "@/types";
+import { Loader2, AlertCircle } from "lucide-react";
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -24,7 +25,7 @@ export default function AdminUsersPage() {
       setUsers(data);
     } catch (err: unknown) {
       if (err instanceof Error) setError(err.message);
-      else setError("Failed to fetch users");
+      else setError("Failed to fetch user directory");
     } finally {
       setLoading(false);
     }
@@ -57,14 +58,22 @@ export default function AdminUsersPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-800">👥 User Directory Management</h1>
-        <p className="text-sm text-gray-500">Manage user accounts, assign roles, reset no-show counters, and unlock accounts</p>
+        <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Member Directory</h1>
+        <p className="text-xs text-zinc-500 mt-0.5">Manage user roles, resolve no-show policy suspensions, and update member departments</p>
       </div>
 
-      {error && <div className="p-3 bg-red-100 text-red-700 text-sm rounded">{error}</div>}
+      {error && (
+        <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-2.5 text-xs text-rose-800">
+          <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
 
       {loading ? (
-        <div className="p-8 text-center text-gray-500">Loading users...</div>
+        <div className="p-16 flex items-center justify-center text-zinc-400 gap-2 text-xs">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>Loading user directory...</span>
+        </div>
       ) : (
         <UserTable
           users={users}

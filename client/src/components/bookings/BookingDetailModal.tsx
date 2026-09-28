@@ -1,6 +1,7 @@
 "use client";
 
 import type { Booking } from "@/types";
+import { X, Calendar, Clock, KeyRound, AlertCircle, CheckCircle2, User } from "lucide-react";
 
 interface BookingDetailModalProps {
   booking: Booking | null;
@@ -15,61 +16,76 @@ export function BookingDetailModal({ booking, isOpen, onClose }: BookingDetailMo
   const end = new Date(booking.end_time);
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-lg">
-        <div className="flex justify-between items-start mb-4 border-b pb-3">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-xs">
+      <div className="bg-white rounded-xl border border-zinc-200 shadow-xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100">
           <div>
-            <h2 className="text-lg font-bold text-gray-800">{booking.title}</h2>
-            <p className="text-xs text-gray-500">ID: {booking.id}</p>
+            <h2 className="text-base font-semibold text-zinc-900">{booking.title}</h2>
+            <p className="text-[11px] font-mono text-zinc-400 mt-0.5">{booking.id}</p>
           </div>
-          <span className="px-2.5 py-1 text-xs font-semibold rounded bg-blue-100 text-blue-800">
-            {booking.status}
-          </span>
+          <button
+            onClick={onClose}
+            className="p-1 rounded-md text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
-        <div className="space-y-3 text-sm text-gray-700">
-          <div>
-            <span className="text-gray-500 block">Date & Time</span>
-            <span className="font-medium">
-              {start.toLocaleDateString("th-TH")} ({start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
-            </span>
+        <div className="p-6 space-y-4 text-xs">
+          <div className="p-3.5 bg-zinc-50 rounded-lg border border-zinc-100 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-zinc-500 font-medium">Status</span>
+              <span className="font-semibold text-zinc-900">{booking.status}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-zinc-500 font-medium">Date & Time</span>
+              <span className="font-medium text-zinc-800">
+                {start.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} &bull;{" "}
+                {start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} –{" "}
+                {end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              </span>
+            </div>
           </div>
 
           {booking.check_in_pin && (
-            <div className="bg-blue-50 border border-blue-200 p-3 rounded text-center">
-              <span className="text-xs text-blue-700 uppercase font-semibold block">Check-In Access PIN</span>
-              <span className="text-2xl font-mono font-bold tracking-widest text-blue-900">
+            <div className="p-4 bg-zinc-900 text-white rounded-lg text-center shadow-xs">
+              <span className="text-[11px] uppercase tracking-wider text-zinc-400 font-medium block mb-1">
+                Kiosk Check-In Access PIN
+              </span>
+              <span className="text-2xl font-mono font-bold tracking-widest text-white">
                 {booking.check_in_pin}
               </span>
             </div>
           )}
 
           {booking.checked_in_at && (
-            <div>
-              <span className="text-gray-500 block">Checked In At</span>
-              <span className="font-medium">{new Date(booking.checked_in_at).toLocaleString("th-TH")}</span>
+            <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 border border-emerald-200 p-3 rounded-lg">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span>Checked in at {new Date(booking.checked_in_at).toLocaleString("en-US")}</span>
             </div>
           )}
 
           {booking.rejection_reason && (
-            <div className="bg-red-50 p-3 rounded text-red-700 text-xs">
-              <strong>Rejection Reason:</strong> {booking.rejection_reason}
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-800 space-y-1">
+              <span className="font-semibold block">Decline Reason:</span>
+              <p className="text-rose-700">{booking.rejection_reason}</p>
             </div>
           )}
 
           {booking.cancellation_reason && (
-            <div className="bg-gray-100 p-3 rounded text-gray-700 text-xs">
-              <strong>Cancellation Reason:</strong> {booking.cancellation_reason}
+            <div className="p-3 bg-zinc-100 border border-zinc-200 rounded-lg text-zinc-700 space-y-1">
+              <span className="font-semibold block">Cancellation Reason:</span>
+              <p className="text-zinc-600">{booking.cancellation_reason}</p>
             </div>
           )}
         </div>
 
-        <div className="flex justify-end border-t pt-4 mt-6">
+        <div className="flex items-center justify-end px-6 py-4 border-t border-zinc-100 bg-zinc-50/50">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-slate-800 text-white text-sm rounded hover:bg-slate-900"
+            className="px-4 py-2 text-xs font-medium text-zinc-700 hover:bg-zinc-100 rounded-md border border-zinc-200 transition-colors"
           >
-            Close
+            Dismiss
           </button>
         </div>
       </div>

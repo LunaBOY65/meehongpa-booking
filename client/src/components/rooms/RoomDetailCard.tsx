@@ -1,6 +1,7 @@
 "use client";
 
 import type { Room } from "@/types";
+import { DoorOpen, Users, MapPin, ShieldAlert, CheckCircle2 } from "lucide-react";
 
 interface RoomDetailCardProps {
   room: Room;
@@ -8,39 +9,66 @@ interface RoomDetailCardProps {
 
 export function RoomDetailCard({ room }: RoomDetailCardProps) {
   return (
-    <div className="bg-white border rounded-lg p-6 shadow-sm mb-6">
-      <div className="flex justify-between items-center mb-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">{room.name}</h1>
-          <p className="text-sm text-gray-500">
-            {room.building} &bull; Floor {room.floor}
-          </p>
+    <div className="bg-white border border-zinc-200/90 rounded-xl p-6 shadow-xs mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-zinc-100">
+        <div className="flex items-start gap-3.5">
+          <div className="w-10 h-10 rounded-lg bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-700 shrink-0">
+            <DoorOpen className="w-5 h-5" />
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold tracking-tight text-zinc-900">{room.name}</h1>
+            <p className="text-xs text-zinc-500 flex items-center gap-1.5 mt-0.5">
+              <MapPin className="w-3.5 h-3.5 text-zinc-400" />
+              <span>{room.building} &bull; Floor {room.floor}</span>
+            </p>
+          </div>
         </div>
-        <span
-          className={`px-3 py-1 rounded text-sm font-semibold ${
-            room.is_active
-              ? "bg-green-100 text-green-800"
-              : "bg-red-100 text-red-800"
-          }`}
-        >
-          {room.is_active ? "Active" : "Inactive"}
-        </span>
-      </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 border-t pt-4 text-sm text-gray-700">
         <div>
-          <span className="text-gray-500 block">Capacity</span>
-          <span className="font-semibold text-lg">{room.capacity} seats</span>
-        </div>
-        <div>
-          <span className="text-gray-500 block">Approval Required</span>
-          <span className="font-semibold text-lg">
-            {room.requires_approval ? "Yes (Admin Review)" : "No (Instant)"}
+          <span
+            className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${
+              room.is_active
+                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                : "bg-rose-50 text-rose-700 border border-rose-200"
+            }`}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${room.is_active ? "bg-emerald-500" : "bg-rose-500"}`} />
+            {room.is_active ? "Active Facility" : "Under Maintenance"}
           </span>
         </div>
-        <div>
-          <span className="text-gray-500 block">Building & Floor</span>
-          <span className="font-semibold text-lg">{room.building} / Fl. {room.floor}</span>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6 text-xs">
+        <div className="p-3.5 bg-zinc-50/75 rounded-lg border border-zinc-100">
+          <span className="text-zinc-500 block font-medium mb-1">Room Capacity</span>
+          <div className="text-base font-semibold text-zinc-900 flex items-center gap-1.5">
+            <Users className="w-4 h-4 text-zinc-500" />
+            <span>{room.capacity} Persons</span>
+          </div>
+        </div>
+
+        <div className="p-3.5 bg-zinc-50/75 rounded-lg border border-zinc-100">
+          <span className="text-zinc-500 block font-medium mb-1">Reservation Policy</span>
+          <div className="text-sm font-semibold text-zinc-900 flex items-center gap-1.5">
+            {room.requires_approval ? (
+              <span className="text-amber-700 font-medium flex items-center gap-1">
+                <ShieldAlert className="w-4 h-4 text-amber-600" />
+                Admin Approval Queue
+              </span>
+            ) : (
+              <span className="text-emerald-700 font-medium flex items-center gap-1">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                Auto-Confirmed
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="p-3.5 bg-zinc-50/75 rounded-lg border border-zinc-100">
+          <span className="text-zinc-500 block font-medium mb-1">Building Location</span>
+          <div className="text-sm font-semibold text-zinc-900">
+            {room.building}, Floor {room.floor}
+          </div>
         </div>
       </div>
     </div>

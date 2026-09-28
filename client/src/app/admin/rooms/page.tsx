@@ -6,6 +6,7 @@ import { RoomList } from "@/components/rooms/RoomList";
 import { RoomFormModal } from "@/components/rooms/RoomFormModal";
 import { RoomDeleteDialog } from "@/components/rooms/RoomDeleteDialog";
 import type { Room, CreateRoomRequest, UpdateRoomRequest } from "@/types";
+import { Plus, Loader2, AlertCircle } from "lucide-react";
 
 export default function AdminRoomsPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -24,7 +25,7 @@ export default function AdminRoomsPage() {
       setRooms(data);
     } catch (err: unknown) {
       if (err instanceof Error) setError(err.message);
-      else setError("Failed to fetch rooms");
+      else setError("Failed to fetch meeting rooms");
     } finally {
       setLoading(false);
     }
@@ -68,23 +69,32 @@ export default function AdminRoomsPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">🏢 Admin Room Management</h1>
-          <p className="text-sm text-gray-500">Create, update, or remove meeting room facilities</p>
+          <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Manage Meeting Rooms</h1>
+          <p className="text-xs text-zinc-500 mt-0.5">Add, modify specifications, or archive workspace rooms and equipment</p>
         </div>
         <button
           onClick={handleOpenAdd}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-semibold shadow"
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-white bg-zinc-900 hover:bg-zinc-800 rounded-md transition-colors shadow-xs self-start sm:self-auto"
         >
-          + Add New Room
+          <Plus className="w-3.5 h-3.5" />
+          <span>New Meeting Room</span>
         </button>
       </div>
 
-      {error && <div className="p-3 bg-red-100 text-red-700 text-sm rounded">{error}</div>}
+      {error && (
+        <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-2.5 text-xs text-rose-800">
+          <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
 
       {loading ? (
-        <div className="p-8 text-center text-gray-500">Loading rooms...</div>
+        <div className="p-16 flex items-center justify-center text-zinc-400 gap-2 text-xs">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>Loading rooms...</span>
+        </div>
       ) : (
         <RoomList
           rooms={rooms}

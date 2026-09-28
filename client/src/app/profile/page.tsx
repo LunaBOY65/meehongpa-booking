@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { userService } from "@/services/user.service";
 import { UserProfileCard } from "@/components/users/UserProfileCard";
 import type { User } from "@/types";
+import { Loader2, AlertCircle } from "lucide-react";
 
 export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
@@ -15,27 +16,31 @@ export default function ProfilePage() {
       .getCurrentUser()
       .then(setUser)
       .catch((err) => {
-        setError(err.message || "Failed to load user profile. Please login.");
+        setError(err.message || "Failed to load user profile. Please sign in.");
       })
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) {
-    return <div className="p-8 text-center text-gray-500">Loading user profile...</div>;
-  }
-
-  if (error || !user) {
-    return (
-      <div className="max-w-md mx-auto p-6 bg-red-50 border border-red-200 rounded text-red-700 text-center">
-        ❌ {error || "User profile not available."}
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800">👤 User Profile</h1>
-      <UserProfileCard user={user} />
+      <div>
+        <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Account Overview</h1>
+        <p className="text-xs text-zinc-500 mt-0.5">Manage your personal credentials, department association, and status</p>
+      </div>
+
+      {loading ? (
+        <div className="p-12 flex items-center justify-center text-zinc-400 gap-2 text-xs">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>Loading profile...</span>
+        </div>
+      ) : error || !user ? (
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-xs text-rose-800 max-w-md">
+          <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+          <span>{error || "User profile unavailable."}</span>
+        </div>
+      ) : (
+        <UserProfileCard user={user} />
+      )}
     </div>
   );
 }
