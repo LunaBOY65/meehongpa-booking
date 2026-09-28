@@ -1,12 +1,9 @@
 from datetime import datetime, timedelta, timezone
 import os
 
+import bcrypt
 from dotenv import load_dotenv
 import jwt
-from passlib.context import CryptContext
-
-# กำหนดวิธีแฮชรหัสผ่านด้วย bcrypt
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # โหลดค่าจากไฟล์ .env
 load_dotenv()
@@ -15,14 +12,16 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY", "fallback_secret_key")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
-# 1. แฮชรหัสผ่าน (แปลง 1234 -> $2b$12$...)
+# 1. แฮชรหัสผ่าน (แปลง 1234 -> $2b$12$...)(แปลงรหัสผ่านเป็น byte -> สุ่ม salt -> แฮช -> แปลงกลับเป็น str)
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    pwd_bytes = password.encode("utf-8")
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(pwd_bytes, salt).decode("utf-8")
 
 
 # 2. ตรวจสอบรหัสผ่าน
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
 
 
 # 3. สร้าง JWT Access Token (ตั๋วเข้าใช้งาน)
