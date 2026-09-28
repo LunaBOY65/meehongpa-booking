@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { Room, CreateRoomRequest, UpdateRoomRequest } from "@/types";
 import { X, Loader2, AlertCircle, Building2 } from "lucide-react";
 
@@ -11,35 +11,23 @@ interface RoomFormModalProps {
   onSave: (data: CreateRoomRequest | UpdateRoomRequest, id?: string) => Promise<void>;
 }
 
-export function RoomFormModal({ room, isOpen, onClose, onSave }: RoomFormModalProps) {
-  const [name, setName] = useState("");
-  const [capacity, setCapacity] = useState(10);
-  const [building, setBuilding] = useState("");
-  const [floor, setFloor] = useState("");
-  const [requiresApproval, setRequiresApproval] = useState(false);
-  const [isActive, setIsActive] = useState(true);
+function RoomFormContent({
+  room,
+  onClose,
+  onSave,
+}: {
+  room: Room | null;
+  onClose: () => void;
+  onSave: (data: CreateRoomRequest | UpdateRoomRequest, id?: string) => Promise<void>;
+}) {
+  const [name, setName] = useState(room?.name || "");
+  const [capacity, setCapacity] = useState(room?.capacity || 10);
+  const [building, setBuilding] = useState(room?.building || "");
+  const [floor, setFloor] = useState(room?.floor || "");
+  const [requiresApproval, setRequiresApproval] = useState(room?.requires_approval || false);
+  const [isActive, setIsActive] = useState(room?.is_active ?? true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (room) {
-      setName(room.name);
-      setCapacity(room.capacity);
-      setBuilding(room.building);
-      setFloor(room.floor);
-      setRequiresApproval(room.requires_approval);
-      setIsActive(room.is_active);
-    } else {
-      setName("");
-      setCapacity(10);
-      setBuilding("");
-      setFloor("");
-      setRequiresApproval(false);
-      setIsActive(true);
-    }
-  }, [room, isOpen]);
-
-  if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,136 +65,144 @@ export function RoomFormModal({ room, isOpen, onClose, onSave }: RoomFormModalPr
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-xs">
-      <div className="bg-white rounded-xl border border-zinc-200 shadow-xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100">
-          <div className="flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-zinc-600" />
-            <h2 className="text-base font-semibold text-zinc-900">
-              {room ? "Edit Meeting Room" : "Add Meeting Room"}
-            </h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-md text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
+    <div className="bg-white rounded-xl border border-zinc-200 shadow-xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100">
+        <div className="flex items-center gap-2">
+          <Building2 className="w-4 h-4 text-zinc-600" />
+          <h2 className="text-base font-semibold text-zinc-900">
+            {room ? "Edit Meeting Room" : "Add Meeting Room"}
+          </h2>
+        </div>
+        <button
+          onClick={onClose}
+          className="p-1 rounded-md text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      {error && (
+        <div className="mx-6 mt-4 p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-2 text-xs text-rose-800">
+          <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <div>
+          <label className="block text-xs font-medium text-zinc-700 mb-1.5">
+            Room Name <span className="text-rose-500">*</span>
+          </label>
+          <input
+            type="text"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Executive Boardroom 4A"
+            className="w-full px-3 py-2 text-sm bg-white border border-zinc-200 rounded-md text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors"
+          />
         </div>
 
-        {error && (
-          <div className="mx-6 mt-4 p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-2 text-xs text-rose-800">
-            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <div className="grid grid-cols-3 gap-3">
           <div>
             <label className="block text-xs font-medium text-zinc-700 mb-1.5">
-              Room Name <span className="text-rose-500">*</span>
+              Capacity <span className="text-rose-500">*</span>
+            </label>
+            <input
+              type="number"
+              min="1"
+              required
+              value={capacity}
+              onChange={(e) => setCapacity(Number(e.target.value))}
+              className="w-full px-3 py-2 text-sm bg-white border border-zinc-200 rounded-md text-zinc-900 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors text-right"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-700 mb-1.5">
+              Building <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
               required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Executive Boardroom 4A"
+              value={building}
+              onChange={(e) => setBuilding(e.target.value)}
+              placeholder="Tower A"
               className="w-full px-3 py-2 text-sm bg-white border border-zinc-200 rounded-md text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors"
             />
           </div>
-
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-zinc-700 mb-1.5">
-                Capacity <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="number"
-                min="1"
-                required
-                value={capacity}
-                onChange={(e) => setCapacity(Number(e.target.value))}
-                className="w-full px-3 py-2 text-sm bg-white border border-zinc-200 rounded-md text-zinc-900 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors text-right"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-700 mb-1.5">
-                Building <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={building}
-                onChange={(e) => setBuilding(e.target.value)}
-                placeholder="Tower A"
-                className="w-full px-3 py-2 text-sm bg-white border border-zinc-200 rounded-md text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-700 mb-1.5">
-                Floor <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={floor}
-                onChange={(e) => setFloor(e.target.value)}
-                placeholder="4"
-                className="w-full px-3 py-2 text-sm bg-white border border-zinc-200 rounded-md text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors"
-              />
-            </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-700 mb-1.5">
+              Floor <span className="text-rose-500">*</span>
+            </label>
+            <input
+              type="text"
+              required
+              value={floor}
+              onChange={(e) => setFloor(e.target.value)}
+              placeholder="4"
+              className="w-full px-3 py-2 text-sm bg-white border border-zinc-200 rounded-md text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors"
+            />
           </div>
+        </div>
 
-          <div className="pt-2 space-y-2.5">
-            <label className="flex items-start gap-2.5 cursor-pointer select-none">
+        <div className="pt-2 space-y-2.5">
+          <label className="flex items-start gap-2.5 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={requiresApproval}
+              onChange={(e) => setRequiresApproval(e.target.checked)}
+              className="w-4 h-4 mt-0.5 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+            />
+            <div className="text-xs">
+              <span className="font-medium text-zinc-900 block">Require Admin Approval</span>
+              <span className="text-zinc-500">Reservations will stay PENDING until confirmed by an admin.</span>
+            </div>
+          </label>
+
+          {room && (
+            <label className="flex items-start gap-2.5 cursor-pointer select-none pt-1">
               <input
                 type="checkbox"
-                checked={requiresApproval}
-                onChange={(e) => setRequiresApproval(e.target.checked)}
+                checked={isActive}
+                onChange={(e) => setIsActive(e.target.checked)}
                 className="w-4 h-4 mt-0.5 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
               />
               <div className="text-xs">
-                <span className="font-medium text-zinc-900 block">Require Admin Approval</span>
-                <span className="text-zinc-500">Reservations will stay PENDING until confirmed by an admin.</span>
+                <span className="font-medium text-zinc-900 block">Facility Active</span>
+                <span className="text-zinc-500">Uncheck to disable booking for maintenance.</span>
               </div>
             </label>
+          )}
+        </div>
 
-            {room && (
-              <label className="flex items-start gap-2.5 cursor-pointer select-none pt-1">
-                <input
-                  type="checkbox"
-                  checked={isActive}
-                  onChange={(e) => setIsActive(e.target.checked)}
-                  className="w-4 h-4 mt-0.5 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
-                />
-                <div className="text-xs">
-                  <span className="font-medium text-zinc-900 block">Facility Active</span>
-                  <span className="text-zinc-500">Uncheck to disable booking for maintenance.</span>
-                </div>
-              </label>
-            )}
-          </div>
+        <div className="flex items-center justify-end gap-2 pt-4 border-t border-zinc-100">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-3.5 py-2 text-xs font-medium text-zinc-700 hover:bg-zinc-100 rounded-md border border-zinc-200 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-zinc-900 hover:bg-zinc-800 rounded-md disabled:bg-zinc-300 disabled:cursor-not-allowed transition-colors shadow-xs"
+          >
+            {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+            <span>{room ? "Update Room" : "Create Room"}</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
 
-          <div className="flex items-center justify-end gap-2 pt-4 border-t border-zinc-100">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-3.5 py-2 text-xs font-medium text-zinc-700 hover:bg-zinc-100 rounded-md border border-zinc-200 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-zinc-900 hover:bg-zinc-800 rounded-md disabled:bg-zinc-300 disabled:cursor-not-allowed transition-colors shadow-xs"
-            >
-              {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              <span>{room ? "Update Room" : "Create Room"}</span>
-            </button>
-          </div>
-        </form>
-      </div>
+export function RoomFormModal({ room, isOpen, onClose, onSave }: RoomFormModalProps) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-xs">
+      <RoomFormContent key={room ? room.id : "new"} room={room} onClose={onClose} onSave={onSave} />
     </div>
   );
 }

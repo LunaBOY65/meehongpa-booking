@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { userService } from "@/services/user.service";
 import { UserTable } from "@/components/users/UserTable";
 import { UserEditModal } from "@/components/users/UserEditModal";
@@ -17,23 +17,38 @@ export default function AdminUsersPage() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
-  const fetchUsers = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  // Initial Mount
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadInitialUsers() {
+      try {
+        const data = await userService.getUsers();
+        if (isMounted) setUsers(data);
+      } catch (err: unknown) {
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : "Failed to fetch user directory");
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    loadInitialUsers();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const refreshUsers = async () => {
     try {
       const data = await userService.getUsers();
       setUsers(data);
     } catch (err: unknown) {
-      if (err instanceof Error) setError(err.message);
-      else setError("Failed to fetch user directory");
-    } finally {
-      setLoading(false);
+      setError(err instanceof Error ? err.message : "Failed to refresh users");
     }
-  }, []);
-
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+  };
 
   const handleOpenEdit = (user: User) => {
     setSelectedUser(user);
@@ -47,12 +62,12 @@ export default function AdminUsersPage() {
 
   const handleSaveUser = async (id: string, data: UpdateUserRequest) => {
     await userService.updateUser(id, data);
-    fetchUsers();
+    await refreshUsers();
   };
 
   const handleDeleteUser = async (id: string) => {
     await userService.deleteUser(id);
-    fetchUsers();
+    await refreshUsers();
   };
 
   return (

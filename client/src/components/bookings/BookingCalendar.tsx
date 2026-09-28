@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Booking } from "@/types";
-import { Calendar, Clock, Lock, CheckCircle2 } from "lucide-react";
+import { Calendar, Lock, CheckCircle2 } from "lucide-react";
 
 interface BookingCalendarProps {
   bookings: Booking[];

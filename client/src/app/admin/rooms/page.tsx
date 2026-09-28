@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { roomService } from "@/services/room.service";
 import { RoomList } from "@/components/rooms/RoomList";
 import { RoomFormModal } from "@/components/rooms/RoomFormModal";
@@ -17,23 +17,38 @@ export default function AdminRoomsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
-  const fetchRooms = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  // Initial Mount
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadInitialRooms() {
+      try {
+        const data = await roomService.getRooms();
+        if (isMounted) setRooms(data);
+      } catch (err: unknown) {
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : "Failed to fetch meeting rooms");
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    loadInitialRooms();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const refreshRooms = async () => {
     try {
       const data = await roomService.getRooms();
       setRooms(data);
     } catch (err: unknown) {
-      if (err instanceof Error) setError(err.message);
-      else setError("Failed to fetch meeting rooms");
-    } finally {
-      setLoading(false);
+      setError(err instanceof Error ? err.message : "Failed to refresh rooms");
     }
-  }, []);
-
-  useEffect(() => {
-    fetchRooms();
-  }, [fetchRooms]);
+  };
 
   const handleOpenAdd = () => {
     setSelectedRoom(null);
@@ -59,12 +74,12 @@ export default function AdminRoomsPage() {
     } else {
       await roomService.createRoom(data as CreateRoomRequest);
     }
-    fetchRooms();
+    await refreshRooms();
   };
 
   const handleDeleteRoom = async (id: string) => {
     await roomService.deleteRoom(id);
-    fetchRooms();
+    await refreshRooms();
   };
 
   return (

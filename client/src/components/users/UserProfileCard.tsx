@@ -1,7 +1,7 @@
 "use client";
 
 import type { User } from "@/types";
-import { User as UserIcon, Mail, Building, Shield, AlertTriangle, CheckCircle2, Lock } from "lucide-react";
+import { Mail, Building, Shield, AlertTriangle, CheckCircle2, Lock } from "lucide-react";
 
 interface UserProfileCardProps {
   user: User;

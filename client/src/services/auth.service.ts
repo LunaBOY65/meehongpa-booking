@@ -3,7 +3,6 @@ import type {
   LoginRequest,
   LoginResponse,
   RegisterRequest,
-  User,
 } from "@/types";
 
 export const authService = {
@@ -32,8 +31,9 @@ export const authService = {
 
   // ออกจากระบบ
   logout() {
-    localStorage.removeItem("access_token");
-    window.location.href = "/login";
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("access_token");
+    }
   },
 
   // เช็กว่ามี Token อยู่ในเครื่องไหม

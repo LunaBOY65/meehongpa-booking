@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { bookingService } from "@/services/booking.service";
 import { BookingApprovalTable } from "@/components/bookings/BookingApprovalTable";
 import { BookingApproveModal } from "@/components/bookings/BookingApproveModal";
@@ -17,23 +17,38 @@ export default function AdminBookingsPage() {
   const [isApproveOpen, setIsApproveOpen] = useState(false);
   const [isRejectOpen, setIsRejectOpen] = useState(false);
 
-  const fetchPending = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  // Initial Mount
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadInitialPending() {
+      try {
+        const data = await bookingService.getBookings({ status: "PENDING" });
+        if (isMounted) setPendingBookings(data);
+      } catch (err: unknown) {
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : "Failed to fetch pending requests");
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    loadInitialPending();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const refreshPending = async () => {
     try {
       const data = await bookingService.getBookings({ status: "PENDING" });
       setPendingBookings(data);
     } catch (err: unknown) {
-      if (err instanceof Error) setError(err.message);
-      else setError("Failed to fetch pending requests");
-    } finally {
-      setLoading(false);
+      setError(err instanceof Error ? err.message : "Failed to refresh pending bookings");
     }
-  }, []);
-
-  useEffect(() => {
-    fetchPending();
-  }, [fetchPending]);
+  };
 
   const handleOpenApprove = (b: Booking) => {
     setSelectedBooking(b);
@@ -47,12 +62,12 @@ export default function AdminBookingsPage() {
 
   const handleConfirmApprove = async (id: string) => {
     await bookingService.approveBooking(id);
-    fetchPending();
+    await refreshPending();
   };
 
   const handleConfirmReject = async (id: string, reason: string) => {
     await bookingService.rejectBooking(id, { reason });
-    fetchPending();
+    await refreshPending();
   };
 
   return (

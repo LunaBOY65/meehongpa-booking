@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { roomService } from "@/services/room.service";
 import { RoomFilter } from "@/components/rooms/RoomFilter";
 import { RoomList } from "@/components/rooms/RoomList";
@@ -12,7 +12,8 @@ export default function RoomsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchRooms = useCallback(async (params?: RoomFilterParams) => {
+  // User Action: filtering rooms
+  const handleFilterChange = async (params?: RoomFilterParams) => {
     setLoading(true);
     setError(null);
     try {
@@ -24,11 +25,31 @@ export default function RoomsPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
+  // Initial Mount
   useEffect(() => {
-    fetchRooms();
-  }, [fetchRooms]);
+    let isMounted = true;
+
+    async function loadInitialRooms() {
+      try {
+        const data = await roomService.getRooms();
+        if (isMounted) setRooms(data);
+      } catch (err: unknown) {
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : "Failed to fetch meeting rooms");
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    loadInitialRooms();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -37,7 +58,7 @@ export default function RoomsPage() {
         <p className="text-xs text-zinc-500 mt-0.5">Explore available workspaces, equipment capacities, and reservation schedules</p>
       </div>
 
-      <RoomFilter onFilterChange={fetchRooms} />
+      <RoomFilter onFilterChange={handleFilterChange} />
 
       {error && (
         <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-2.5 text-xs text-rose-800">

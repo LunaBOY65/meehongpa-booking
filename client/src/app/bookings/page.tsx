@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { bookingService } from "@/services/booking.service";
 import { userService } from "@/services/user.service";
 import { BookingList } from "@/components/bookings/BookingList";
@@ -18,24 +18,30 @@ export default function MyBookingsPage() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isCancelOpen, setIsCancelOpen] = useState(false);
 
-  const fetchBookings = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const me = await userService.getCurrentUser();
-      const list = await bookingService.getBookings({ user_id: me.id });
-      setBookings(list);
-    } catch (err: unknown) {
-      if (err instanceof Error) setError(err.message);
-      else setError("Failed to fetch reservations");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
+  // Initial Mount
   useEffect(() => {
-    fetchBookings();
-  }, [fetchBookings]);
+    let isMounted = true;
+
+    async function loadInitialBookings() {
+      try {
+        const me = await userService.getCurrentUser();
+        const list = await bookingService.getBookings({ user_id: me.id });
+        if (isMounted) setBookings(list);
+      } catch (err: unknown) {
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : "Failed to fetch reservations");
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    loadInitialBookings();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleOpenDetail = (b: Booking) => {
     setSelectedBooking(b);
@@ -49,7 +55,14 @@ export default function MyBookingsPage() {
 
   const handleConfirmCancel = async (id: string, reason: string) => {
     await bookingService.cancelBooking(id, { reason });
-    fetchBookings();
+    // Refetch user bookings after cancellation
+    try {
+      const me = await userService.getCurrentUser();
+      const list = await bookingService.getBookings({ user_id: me.id });
+      setBookings(list);
+    } catch {
+      // Keep existing list on failure
+    }
   };
 
   return (

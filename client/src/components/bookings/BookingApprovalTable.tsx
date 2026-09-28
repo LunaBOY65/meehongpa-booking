@@ -1,7 +1,7 @@
 "use client";
 
 import type { Booking } from "@/types";
-import { CheckCircle2, Clock, Check, X, Inbox } from "lucide-react";
+import { Clock, Check, X, Inbox } from "lucide-react";
 
 interface BookingApprovalTableProps {
   bookings: Booking[];

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { RoomFilterParams } from "@/types";
-import { Search, Filter, RotateCcw, Building, Users } from "lucide-react";
+import { Filter, RotateCcw, Building, Users } from "lucide-react";
 
 interface RoomFilterProps {
   onFilterChange: (filters: RoomFilterParams) => void;

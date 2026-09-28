@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState, useCallback } from "react";
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { roomService } from "@/services/room.service";
 import { bookingService } from "@/services/booking.service";
@@ -26,30 +26,57 @@ export default function RoomDetailPage({
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const roomData = await roomService.getRoomById(id);
-      setRoom(roomData);
+  // Initial Mount: Fetch initial room and bookings
+  useEffect(() => {
+    let isMounted = true;
 
+    async function loadInitialData() {
+      try {
+        const [roomData, bookingList] = await Promise.all([
+          roomService.getRoomById(id),
+          bookingService.getBookings({
+            room_id: id,
+            date: selectedDate,
+          }),
+        ]);
+
+        if (isMounted) {
+          setRoom(roomData);
+          setBookings(bookingList);
+        }
+      } catch (err: unknown) {
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : "Failed to load room details");
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadInitialData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id, selectedDate]);
+
+  // User Action: Change selected schedule date
+  const handleDateChange = async (newDate: string) => {
+    setSelectedDate(newDate);
+    try {
       const bookingList = await bookingService.getBookings({
         room_id: id,
-        date: selectedDate,
+        date: newDate,
       });
       setBookings(bookingList);
     } catch (err: unknown) {
-      if (err instanceof Error) setError(err.message);
-      else setError("Failed to load room details");
-    } finally {
-      setLoading(false);
+      setError(err instanceof Error ? err.message : "Failed to load schedule for date");
     }
-  }, [id, selectedDate]);
+  };
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
+  // User Action: Submit booking
   const handleBookingSubmit = async (data: CreateBookingRequest) => {
     setSuccessMsg(null);
     const created = await bookingService.createBooking(data);
@@ -58,7 +85,13 @@ export default function RoomDetailPage({
     } else {
       setSuccessMsg(`Room reservation confirmed! Check-In Access PIN: ${created.check_in_pin}`);
     }
-    loadData();
+
+    // Refresh bookings after reservation
+    const bookingList = await bookingService.getBookings({
+      room_id: id,
+      date: selectedDate,
+    });
+    setBookings(bookingList);
   };
 
   if (loading && !room) {
@@ -70,7 +103,7 @@ export default function RoomDetailPage({
     );
   }
 
-  if (error || !room) {
+  if (error && !room) {
     return (
       <div className="max-w-md mx-auto p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2.5 text-xs text-rose-800">
         <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
@@ -78,6 +111,8 @@ export default function RoomDetailPage({
       </div>
     );
   }
+
+  if (!room) return null;
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -104,13 +139,13 @@ export default function RoomDetailPage({
           <BookingCalendar
             bookings={bookings}
             selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
+            onDateChange={handleDateChange}
           />
         </div>
         <div>
           <BookingForm
             roomId={room.id}
-            onSuccess={loadData}
+            onSuccess={() => {}}
             onSubmitBooking={handleBookingSubmit}
           />
         </div>

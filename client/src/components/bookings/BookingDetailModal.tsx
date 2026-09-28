@@ -1,7 +1,7 @@
 "use client";
 
 import type { Booking } from "@/types";
-import { X, Calendar, Clock, KeyRound, AlertCircle, CheckCircle2, User } from "lucide-react";
+import { X, CheckCircle2 } from "lucide-react";
 
 interface BookingDetailModalProps {
   booking: Booking | null;

@@ -1,28 +1,57 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { authService } from "@/services/auth.service";
 import { userService } from "@/services/user.service";
 import type { User } from "@/types";
-import { Building2, User as UserIcon, LogOut, LogIn, UserPlus } from "lucide-react";
+import { Building2, LogOut, LogIn, UserPlus } from "lucide-react";
 
 export function Navbar() {
+  const router = useRouter();
   const [isAuth, setIsAuth] = useState(false);
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const authed = authService.isAuthenticated();
-    setIsAuth(authed);
-    if (authed) {
-      userService.getCurrentUser().then(setUser).catch(() => {
-        setIsAuth(false);
-      });
+    let isMounted = true;
+
+    async function initAuth() {
+      const authed = authService.isAuthenticated();
+      if (!authed) {
+        if (isMounted) {
+          setIsAuth(false);
+          setUser(null);
+        }
+        return;
+      }
+
+      try {
+        const currentUser = await userService.getCurrentUser();
+        if (isMounted) {
+          setUser(currentUser);
+          setIsAuth(true);
+        }
+      } catch {
+        if (isMounted) {
+          setIsAuth(false);
+          setUser(null);
+        }
+      }
     }
+
+    initAuth();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleLogout = () => {
     authService.logout();
+    setIsAuth(false);
+    setUser(null);
+    router.push("/login");
   };
 
   return (

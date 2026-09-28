@@ -1,7 +1,7 @@
 "use client";
 
 import type { Booking } from "@/types";
-import { Calendar, Clock, KeyRound, AlertCircle, CheckCircle2, XCircle, RotateCcw } from "lucide-react";
+import { Calendar, Clock, CheckCircle2, XCircle, RotateCcw } from "lucide-react";
 
 interface BookingListProps {
   bookings: Booking[];
