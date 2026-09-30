@@ -57,12 +57,15 @@ export default function HomePage() {
             const activeBookings = userBookings
               .filter(
                 (b) =>
-                  (b.status === "APPROVED" || b.status === "PENDING" || b.status === "CHECKED_IN") &&
-                  new Date(b.end_time) > now
+                  (b.status === "APPROVED" ||
+                    b.status === "PENDING" ||
+                    b.status === "CHECKED_IN") &&
+                  new Date(b.end_time) > now,
               )
               .sort(
                 (a, b) =>
-                  new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+                  new Date(a.start_time).getTime() -
+                  new Date(b.start_time).getTime(),
               );
 
             if (activeBookings.length > 0) {
@@ -99,13 +102,17 @@ export default function HomePage() {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* 1. Workspace Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-zinc-200/80">
+      {/* <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-zinc-200/80"> */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
         <div>
           <h1 className="text-xl font-semibold tracking-tight text-zinc-900">
             Workspace Dashboard
           </h1>
           <p className="text-xs text-zinc-500 mt-0.5">
-            {currentUser ? `Welcome back, ${currentUser.full_name}` : "Workspace Overview"} &bull; Real-time facility availability
+            {currentUser
+              ? `Welcome back, ${currentUser.full_name}`
+              : "Workspace Overview"}{" "}
+            &bull; Real-time facility availability
           </p>
         </div>
 
@@ -128,7 +135,7 @@ export default function HomePage() {
       </div>
 
       {/* 2. Assistant & Command Bar (AI / Chatbot Integration Ready) */}
-      <div className="bg-white border border-zinc-200/90 rounded-xl p-2.5 sm:p-3 shadow-xs flex items-center gap-3 focus-within:border-zinc-900 focus-within:ring-1 focus-within:ring-zinc-900 transition-all">
+      {/* <div className="bg-white border border-zinc-200/90 rounded-xl p-2.5 sm:p-3 shadow-xs flex items-center gap-3 focus-within:border-zinc-900 focus-within:ring-1 focus-within:ring-zinc-900 transition-all">
         <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-700 shrink-0">
           <Sparkles className="w-4 h-4" />
         </div>
@@ -150,7 +157,7 @@ export default function HomePage() {
             Ask AI
           </button>
         </div>
-      </div>
+      </div> */}
 
       {/* 3. Status & Today's Schedule Overview (2 Columns) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -180,22 +187,29 @@ export default function HomePage() {
                     <div className="flex items-center gap-3 text-xs text-zinc-500 mt-1">
                       <span className="flex items-center gap-1">
                         <Calendar className="w-3.5 h-3.5 text-zinc-400" />
-                        {new Date(upcomingBooking.start_time).toLocaleDateString("en-US", {
+                        {new Date(
+                          upcomingBooking.start_time,
+                        ).toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",
                         })}
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock className="w-3.5 h-3.5 text-zinc-400" />
-                        {new Date(upcomingBooking.start_time).toLocaleTimeString([], {
+                        {new Date(
+                          upcomingBooking.start_time,
+                        ).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
                         })}{" "}
                         –{" "}
-                        {new Date(upcomingBooking.end_time).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        {new Date(upcomingBooking.end_time).toLocaleTimeString(
+                          [],
+                          {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          },
+                        )}
                       </span>
                     </div>
                   </div>
@@ -205,11 +219,13 @@ export default function HomePage() {
                       upcomingBooking.status === "APPROVED"
                         ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                         : upcomingBooking.status === "CHECKED_IN"
-                        ? "bg-blue-50 text-blue-700 border border-blue-200"
-                        : "bg-amber-50 text-amber-700 border border-amber-200"
+                          ? "bg-blue-50 text-blue-700 border border-blue-200"
+                          : "bg-amber-50 text-amber-700 border border-amber-200"
                     }`}
                   >
-                    {upcomingBooking.status === "APPROVED" && <CheckCircle2 className="w-3 h-3" />}
+                    {upcomingBooking.status === "APPROVED" && (
+                      <CheckCircle2 className="w-3 h-3" />
+                    )}
                     {upcomingBooking.status}
                   </span>
                 </div>
@@ -230,9 +246,12 @@ export default function HomePage() {
                 <div className="w-8 h-8 rounded-full bg-zinc-100 text-zinc-400 flex items-center justify-center mx-auto">
                   <CalendarCheck2 className="w-4 h-4" />
                 </div>
-                <h4 className="text-sm font-medium text-zinc-800">No scheduled reservations</h4>
+                <h4 className="text-sm font-medium text-zinc-800">
+                  No scheduled reservations
+                </h4>
                 <p className="text-xs text-zinc-500 max-w-xs mx-auto">
-                  You have no active meeting bookings for today. Browse available rooms to schedule one.
+                  You have no active meeting bookings for today. Browse
+                  available rooms to schedule one.
                 </p>
                 <div className="pt-2">
                   <Link
@@ -257,7 +276,9 @@ export default function HomePage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <DoorOpen className="w-4 h-4 text-zinc-500" />
-                <span className="text-xs font-medium text-zinc-700">Active Facilities</span>
+                <span className="text-xs font-medium text-zinc-700">
+                  Active Facilities
+                </span>
               </div>
               <span className="text-sm font-semibold font-mono text-zinc-900">
                 {activeRoomsCount} of {rooms.length}
@@ -279,11 +300,17 @@ export default function HomePage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-amber-600" />
-                  <span className="text-xs font-medium text-zinc-700">Pending Approvals</span>
+                  <span className="text-xs font-medium text-zinc-700">
+                    Pending Approvals
+                  </span>
                 </div>
-                <span className={`text-xs font-bold font-mono px-2 py-0.5 rounded-full ${
-                  pendingCount > 0 ? "bg-amber-100 text-amber-800" : "bg-zinc-100 text-zinc-600"
-                }`}>
+                <span
+                  className={`text-xs font-bold font-mono px-2 py-0.5 rounded-full ${
+                    pendingCount > 0
+                      ? "bg-amber-100 text-amber-800"
+                      : "bg-zinc-100 text-zinc-600"
+                  }`}
+                >
                   {pendingCount}
                 </span>
               </div>
