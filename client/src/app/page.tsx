@@ -29,7 +29,7 @@ export default function HomePage() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [upcomingBooking, setUpcomingBooking] = useState<Booking | null>(null);
   const [pendingCount, setPendingCount] = useState<number>(0);
-  const [commandQuery, setCommandQuery] = useState("");
+  // const [commandQuery, setCommandQuery] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -201,6 +201,7 @@ export default function HomePage() {
                         ).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
+                          timeZone: "UTC",
                         })}{" "}
                         –{" "}
                         {new Date(upcomingBooking.end_time).toLocaleTimeString(
@@ -208,6 +209,7 @@ export default function HomePage() {
                           {
                             hour: "2-digit",
                             minute: "2-digit",
+                            timeZone: "UTC",
                           },
                         )}
                       </span>
