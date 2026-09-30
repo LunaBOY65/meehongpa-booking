@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Optional
 import uuid
 from pydantic import BaseModel, EmailStr
+from models import UserRole
 
 # --- Schemas สำหรับ Auth & User ---
 
@@ -25,7 +26,7 @@ class UserOut(BaseModel):
     email: EmailStr
     full_name: str
     department: Optional[str] = None
-    role: str
+    role: UserRole
     no_show_count: int = 0
     is_locked: bool = False
     created_at: Optional[datetime] = None
@@ -34,7 +35,7 @@ class UserOut(BaseModel):
 class UserUpdate(BaseModel):
     full_name: Optional[str] = None
     department: Optional[str] = None
-    role: Optional[str] = None
+    role: Optional[UserRole] = None
     is_locked: Optional[bool] = None
     no_show_count: Optional[int] = None
 
@@ -90,6 +91,12 @@ class BookingOut(BookingCreate):
     cancellation_reason: Optional[str] = None
     created_at: datetime
 
+
+class BookingAvailabilityOut(BaseModel):
+    start_time: datetime
+    end_time: datetime
+    status: str
+
 # Schema สำหรับ Admin ปฏิเสธการจอง
 class BookingRejectRequest(BaseModel):
     reason: str
@@ -102,6 +109,13 @@ class BookingCancelRequest(BaseModel):
 class CheckInRequest(BaseModel):
     booking_id: uuid.UUID
     pin: str
+
+
+class CheckInOut(BaseModel):
+    id: uuid.UUID
+    title: str
+    status: str
+    checked_in_at: Optional[datetime] = None
 
 
 # --- Schemas สำหรับ Analytics ---

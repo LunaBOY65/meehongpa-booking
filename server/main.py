@@ -24,9 +24,11 @@ from schemas import (
     RoomOut,
     BookingCreate,
     BookingOut,
+    BookingAvailabilityOut,
     BookingRejectRequest,
     BookingCancelRequest,
     CheckInRequest,
+    CheckInOut,
     AnalyticsSummaryOut,
     RoomUtilizationOut,
     DailyUtilizationRecord,
@@ -113,7 +115,8 @@ def register(user_data: UserCreate, session: SessionDep):
         email=user_data.email,
         password_hash=hashed_pw,
         full_name=user_data.full_name,
-        department=user_data.department
+        department=user_data.department,
+        role=UserRole.MEMBER,
     )
     session.add(new_user)
     session.commit()
@@ -170,6 +173,8 @@ def get_user_by_id(id: uuid.UUID, session: SessionDep, current_user: CurrentUser
     user = session.get(User, id)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="ไม่พบผู้ใช้งานนี้")
+    if user.id != current_user.id and current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="ไม่มีสิทธิ์ดูข้อมูลผู้ใช้งานนี้")
     return user
 
 
@@ -279,6 +284,44 @@ def delete_room(id: uuid.UUID, session: SessionDep, admin: AdminDep):
 # 3. Bookings Management APIs
 # ==========================================
 
+# API ดูช่วงเวลาที่ไม่ว่าง โดยไม่เปิดเผยรายละเอียดการจอง
+@app.get("/bookings/availability", response_model=list[BookingAvailabilityOut])
+def get_booking_availability(
+    session: SessionDep,
+    current_user: CurrentUserDep,
+    room_id: uuid.UUID,
+    date_str: str,
+):
+    try:
+        target_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="รูปแบบวันที่ไม่ถูกต้อง กรุณาใช้ YYYY-MM-DD",
+        )
+
+    start_of_day = datetime.combine(target_date, datetime.min.time()).replace(tzinfo=timezone.utc)
+    end_of_day = start_of_day + timedelta(days=1)
+    bookings = session.exec(
+        select(Booking).where(
+            Booking.room_id == room_id,
+            Booking.start_time < end_of_day,
+            Booking.end_time > start_of_day,
+            col(Booking.status).in_(
+                [BookingStatus.PENDING, BookingStatus.APPROVED, BookingStatus.CHECKED_IN]
+            ),
+        )
+    ).all()
+    return [
+        BookingAvailabilityOut(
+            start_time=booking.start_time,
+            end_time=booking.end_time,
+            status=booking.status.value,
+        )
+        for booking in bookings
+    ]
+
+
 # API ดึงรายการจองห้องประชุมทั้งหมด (รองรับ Filter)
 @app.get("/bookings", response_model=list[BookingOut])
 def get_bookings(
@@ -290,7 +333,11 @@ def get_bookings(
     booking_status: Optional[BookingStatus] = None,
 ):
     query = select(Booking)
-    if user_id:
+    if current_user.role != UserRole.ADMIN:
+        if user_id is not None and user_id != current_user.id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="ไม่มีสิทธิ์ดูรายการจองของผู้อื่น")
+        query = query.where(Booking.user_id == current_user.id)
+    elif user_id:
         query = query.where(Booking.user_id == user_id)
     if room_id:
         query = query.where(Booking.room_id == room_id)
@@ -318,6 +365,8 @@ def get_booking_by_id(id: uuid.UUID, session: SessionDep, current_user: CurrentU
     booking = session.get(Booking, id)
     if not booking:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="ไม่พบรายการจองนี้")
+    if booking.user_id != current_user.id and current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="ไม่มีสิทธิ์ดูรายการจองนี้")
     return booking
 
 
@@ -435,17 +484,26 @@ def cancel_booking(
 
 
 # API Check-in เข้าห้องประชุมด้วย PIN
-@app.post("/bookings/check-in", response_model=BookingOut)
+@app.post("/bookings/check-in", response_model=CheckInOut)
 def check_in_booking(check_in_data: CheckInRequest, session: SessionDep):
     booking = session.get(Booking, check_in_data.booking_id)
     if not booking:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="ไม่พบรายการจองนี้")
 
+    booking_id = booking.id
+    if booking_id is None:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="ข้อมูลการจองไม่ถูกต้อง")
+
     if booking.status == BookingStatus.CHECKED_IN:
-        return booking
+        return CheckInOut(
+            id=booking_id,
+            title=booking.title,
+            status=booking.status.value,
+            checked_in_at=booking.checked_in_at,
+        )
 
     if booking.status != BookingStatus.APPROVED:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="รายการจองนี้ยังไม่อยู่ในสถานะพร้อมให้ Check-in")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="รายการจองนี้ยังไม่พร้อมให้ Check-in")
 
     if booking.check_in_pin != check_in_data.pin.strip():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="รหัส PIN สำหรับ Check-in ไม่ถูกต้อง")
@@ -455,7 +513,12 @@ def check_in_booking(check_in_data: CheckInRequest, session: SessionDep):
     session.add(booking)
     session.commit()
     session.refresh(booking)
-    return booking
+    return CheckInOut(
+        id=booking_id,
+        title=booking.title,
+        status=booking.status.value,
+        checked_in_at=booking.checked_in_at,
+    )
 
 
 # ==========================================
@@ -466,7 +529,7 @@ def check_in_booking(check_in_data: CheckInRequest, session: SessionDep):
 @app.get("/analytics/summary", response_model=AnalyticsSummaryOut)
 def get_analytics_summary(
     session: SessionDep,
-    current_user: CurrentUserDep,
+    admin: AdminDep,
     month: int = 9,
     year: int = 2026,
 ):
@@ -494,7 +557,7 @@ def get_analytics_summary(
 @app.get("/analytics/room-utilization", response_model=RoomUtilizationOut)
 def get_room_utilization(
     session: SessionDep,
-    current_user: CurrentUserDep,
+    admin: AdminDep,
     room_id: uuid.UUID,
     month: int = 9,
     year: int = 2026,
@@ -548,7 +611,7 @@ def get_room_utilization(
 
 # API รายงานผู้ใช้งานที่ถูกระงับ หรือมีสถิติ No-show
 @app.get("/analytics/user-lockouts", response_model=UserLockoutOut)
-def get_user_lockouts(session: SessionDep, current_user: CurrentUserDep):
+def get_user_lockouts(session: SessionDep, admin: AdminDep):
     users = session.exec(
         select(User).where((User.is_locked == True) | (User.no_show_count > 0))
     ).all()
