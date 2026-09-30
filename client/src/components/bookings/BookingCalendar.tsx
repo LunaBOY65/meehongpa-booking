@@ -10,7 +10,11 @@ interface BookingCalendarProps {
   onDateChange: (date: string) => void;
 }
 
-export function BookingCalendar({ bookings, selectedDate, onDateChange }: BookingCalendarProps) {
+export function BookingCalendar({
+  bookings,
+  selectedDate,
+  onDateChange,
+}: BookingCalendarProps) {
   const [date, setDate] = useState(selectedDate);
 
   const handleDateSubmit = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -19,8 +23,8 @@ export function BookingCalendar({ bookings, selectedDate, onDateChange }: Bookin
     onDateChange(val);
   };
 
-  // Time slots from 08:00 to 18:00
-  const hours = Array.from({ length: 11 }, (_, i) => i + 8);
+  // Time slots from 08:00 to 22:00
+  const hours = Array.from({ length: 15 }, (_, i) => i + 8);
 
   return (
     <div className="bg-white border border-zinc-200/90 rounded-xl p-5 sm:p-6 shadow-xs mb-6">
@@ -30,7 +34,9 @@ export function BookingCalendar({ bookings, selectedDate, onDateChange }: Bookin
             <Calendar className="w-4 h-4 text-zinc-500" />
             Schedule Timeline
           </h2>
-          <p className="text-xs text-zinc-500 mt-0.5">Availability breakdown for 08:00 – 19:00</p>
+          <p className="text-xs text-zinc-500 mt-0.5">
+            Availability breakdown for 08:00 – 22:00
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <label className="text-xs font-medium text-zinc-600">Date:</label>
@@ -45,13 +51,22 @@ export function BookingCalendar({ bookings, selectedDate, onDateChange }: Bookin
 
       <div className="space-y-1.5 pt-4">
         {hours.map((hour) => {
-          const slotStart = new Date(`${date}T${hour.toString().padStart(2, "0")}:00:00Z`);
-          const slotEnd = new Date(`${date}T${(hour + 1).toString().padStart(2, "0")}:00:00Z`);
+          const slotStart = new Date(
+            `${date}T${hour.toString().padStart(2, "0")}:00:00Z`,
+          );
+          const slotEnd = new Date(
+            `${date}T${(hour + 1).toString().padStart(2, "0")}:00:00Z`,
+          );
 
           const matchingBookings = bookings.filter((b) => {
             const start = new Date(b.start_time);
             const end = new Date(b.end_time);
-            return start < slotEnd && end > slotStart && b.status !== "CANCELLED" && b.status !== "REJECTED";
+            return (
+              start < slotEnd &&
+              end > slotStart &&
+              b.status !== "CANCELLED" &&
+              b.status !== "REJECTED"
+            );
           });
 
           const isOccupied = matchingBookings.length > 0;
@@ -72,7 +87,9 @@ export function BookingCalendar({ bookings, selectedDate, onDateChange }: Bookin
                   <div className="flex items-center justify-between gap-2 flex-wrap">
                     <div className="flex items-center gap-1.5 truncate">
                       <Lock className="w-3 h-3 text-rose-600 shrink-0" />
-                      <span className="truncate">{matchingBookings.map((mb) => mb.title).join(", ")}</span>
+                      <span className="truncate">
+                        {matchingBookings.map((mb) => mb.title).join(", ")}
+                      </span>
                     </div>
                     <span className="text-[10px] text-rose-700 bg-rose-100/70 px-1.5 py-0.2 rounded font-mono shrink-0">
                       Reserved
