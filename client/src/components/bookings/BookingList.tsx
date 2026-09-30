@@ -1,7 +1,13 @@
 "use client";
 
 import type { Booking } from "@/types";
-import { Calendar, Clock, CheckCircle2, XCircle, RotateCcw } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  RotateCcw,
+} from "lucide-react";
 
 interface BookingListProps {
   bookings: Booking[];
@@ -9,16 +15,23 @@ interface BookingListProps {
   onCancel?: (booking: Booking) => void;
 }
 
-export function BookingList({ bookings, onViewDetail, onCancel }: BookingListProps) {
+export function BookingList({
+  bookings,
+  onViewDetail,
+  onCancel,
+}: BookingListProps) {
   if (bookings.length === 0) {
     return (
       <div className="bg-white border border-zinc-200 rounded-xl p-12 text-center">
         <div className="w-10 h-10 bg-zinc-100 rounded-full flex items-center justify-center mx-auto mb-3 text-zinc-400">
           <Calendar className="w-5 h-5" />
         </div>
-        <h3 className="text-sm font-semibold text-zinc-900">No reservations found</h3>
+        <h3 className="text-sm font-semibold text-zinc-900">
+          No reservations found
+        </h3>
         <p className="text-xs text-zinc-500 mt-1 max-w-sm mx-auto">
-          You have no active or historical meeting room bookings in this workspace.
+          You have no active or historical meeting room bookings in this
+          workspace.
         </p>
       </div>
     );
@@ -83,25 +96,42 @@ export function BookingList({ bookings, onViewDetail, onCancel }: BookingListPro
           >
             <div className="space-y-1.5">
               <div className="flex items-center gap-2.5 flex-wrap">
-                <h3 className="text-sm font-semibold text-zinc-900 tracking-tight">{booking.title}</h3>
+                <h3 className="text-sm font-semibold text-zinc-900 tracking-tight">
+                  {booking.title}
+                </h3>
                 {getStatusBadge(booking.status)}
               </div>
 
               <div className="flex items-center gap-3 text-xs text-zinc-500 flex-wrap">
                 <span className="flex items-center gap-1">
                   <Calendar className="w-3.5 h-3.5 text-zinc-400" />
-                  {startDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  {startDate.toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
                 </span>
                 <span className="flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5 text-zinc-400" />
-                  {startDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} –{" "}
-                  {endDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  {startDate.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    timeZone: "UTC",
+                  })}{" "}
+                  –{" "}
+                  {endDate.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    timeZone: "UTC",
+                  })}
                 </span>
               </div>
 
               {booking.check_in_pin && (
                 <div className="inline-flex items-center gap-1.5 pt-1">
-                  <span className="text-[11px] font-medium text-zinc-500">Access PIN:</span>
+                  <span className="text-[11px] font-medium text-zinc-500">
+                    Access PIN:
+                  </span>
                   <span className="font-mono text-xs font-semibold px-2 py-0.5 bg-zinc-100 border border-zinc-200 text-zinc-900 rounded tracking-wider">
                     {booking.check_in_pin}
                   </span>
@@ -118,14 +148,16 @@ export function BookingList({ bookings, onViewDetail, onCancel }: BookingListPro
                   View Details
                 </button>
               )}
-              {onCancel && (booking.status === "APPROVED" || booking.status === "PENDING") && (
-                <button
-                  onClick={() => onCancel(booking)}
-                  className="px-3 py-1.5 text-xs font-medium text-rose-600 hover:text-rose-700 bg-white hover:bg-rose-50 border border-zinc-200 hover:border-rose-200 rounded-md transition-colors"
-                >
-                  Cancel
-                </button>
-              )}
+              {onCancel &&
+                (booking.status === "APPROVED" ||
+                  booking.status === "PENDING") && (
+                  <button
+                    onClick={() => onCancel(booking)}
+                    className="px-3 py-1.5 text-xs font-medium text-rose-600 hover:text-rose-700 bg-white hover:bg-rose-50 border border-zinc-200 hover:border-rose-200 rounded-md transition-colors"
+                  >
+                    Cancel
+                  </button>
+                )}
             </div>
           </div>
         );

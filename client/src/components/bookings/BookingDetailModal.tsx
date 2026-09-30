@@ -9,7 +9,11 @@ interface BookingDetailModalProps {
   onClose: () => void;
 }
 
-export function BookingDetailModal({ booking, isOpen, onClose }: BookingDetailModalProps) {
+export function BookingDetailModal({
+  booking,
+  isOpen,
+  onClose,
+}: BookingDetailModalProps) {
   if (!isOpen || !booking) return null;
 
   const start = new Date(booking.start_time);
@@ -20,8 +24,12 @@ export function BookingDetailModal({ booking, isOpen, onClose }: BookingDetailMo
       <div className="bg-white rounded-xl border border-zinc-200 shadow-xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100">
           <div>
-            <h2 className="text-base font-semibold text-zinc-900">{booking.title}</h2>
-            <p className="text-[11px] font-mono text-zinc-400 mt-0.5">{booking.id}</p>
+            <h2 className="text-base font-semibold text-zinc-900">
+              {booking.title}
+            </h2>
+            <p className="text-[11px] font-mono text-zinc-400 mt-0.5">
+              {booking.id}
+            </p>
           </div>
           <button
             onClick={onClose}
@@ -35,14 +43,30 @@ export function BookingDetailModal({ booking, isOpen, onClose }: BookingDetailMo
           <div className="p-3.5 bg-zinc-50 rounded-lg border border-zinc-100 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-zinc-500 font-medium">Status</span>
-              <span className="font-semibold text-zinc-900">{booking.status}</span>
+              <span className="font-semibold text-zinc-900">
+                {booking.status}
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-zinc-500 font-medium">Date & Time</span>
               <span className="font-medium text-zinc-800">
-                {start.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} &bull;{" "}
-                {start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} –{" "}
-                {end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                {start.toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}{" "}
+                &bull;{" "}
+                {start.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  timeZone: "UTC",
+                })}{" "}
+                –{" "}
+                {end.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  timeZone: "UTC",
+                })}
               </span>
             </div>
           </div>
@@ -61,7 +85,10 @@ export function BookingDetailModal({ booking, isOpen, onClose }: BookingDetailMo
           {booking.checked_in_at && (
             <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 border border-emerald-200 p-3 rounded-lg">
               <CheckCircle2 className="w-4 h-4 shrink-0" />
-              <span>Checked in at {new Date(booking.checked_in_at).toLocaleString("en-US")}</span>
+              <span>
+                Checked in at{" "}
+                {new Date(booking.checked_in_at).toLocaleString("en-US")}
+              </span>
             </div>
           )}
 

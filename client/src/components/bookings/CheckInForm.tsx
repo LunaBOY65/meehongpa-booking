@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { bookingService } from "@/services/booking.service";
 import type { Booking } from "@/types";
-import { KeyRound, CheckCircle2, AlertCircle, Loader2, ArrowRight } from "lucide-react";
+import {
+  KeyRound,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  ArrowRight,
+} from "lucide-react";
 
 export function CheckInForm() {
   const [bookingId, setBookingId] = useState("");
@@ -28,7 +34,8 @@ export function CheckInForm() {
       setPin("");
     } catch (err: unknown) {
       if (err instanceof Error) setError(err.message);
-      else setError("Failed to check in. Please verify your PIN and Booking ID.");
+      else
+        setError("Failed to check in. Please verify your PIN and Booking ID.");
     } finally {
       setLoading(false);
     }
@@ -41,9 +48,12 @@ export function CheckInForm() {
           <div className="w-10 h-10 bg-zinc-900 text-white rounded-xl flex items-center justify-center mx-auto mb-3 shadow-xs">
             <KeyRound className="w-5 h-5" />
           </div>
-          <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Room Check-In Kiosk</h1>
+          <h1 className="text-xl font-semibold tracking-tight text-zinc-900">
+            Room Check-In Kiosk
+          </h1>
           <p className="text-xs text-zinc-500 mt-1 max-w-xs mx-auto">
-            Enter your reservation identifier and 6-digit access PIN to record attendance
+            Enter your reservation identifier and 6-digit access PIN to record
+            attendance
           </p>
         </div>
 
@@ -61,10 +71,18 @@ export function CheckInForm() {
               Check-In Successful
             </div>
             <p className="text-emerald-800">
-              Meeting: <strong className="font-semibold text-emerald-950">{successBooking.title}</strong>
+              Meeting:{" "}
+              <strong className="font-semibold text-emerald-950">
+                {successBooking.title}
+              </strong>
             </p>
             <p className="text-emerald-700 text-[11px]">
-              Recorded at {successBooking.checked_in_at ? new Date(successBooking.checked_in_at).toLocaleTimeString("en-US") : "Now"}
+              Recorded at{" "}
+              {successBooking.checked_in_at
+                ? new Date(successBooking.checked_in_at).toLocaleTimeString(
+                    "en-US",
+                  )
+                : "Now"}
             </p>
           </div>
         )}

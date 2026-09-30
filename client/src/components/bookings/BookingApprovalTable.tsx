@@ -9,7 +9,11 @@ interface BookingApprovalTableProps {
   onReject: (booking: Booking) => void;
 }
 
-export function BookingApprovalTable({ bookings, onApprove, onReject }: BookingApprovalTableProps) {
+export function BookingApprovalTable({
+  bookings,
+  onApprove,
+  onReject,
+}: BookingApprovalTableProps) {
   if (bookings.length === 0) {
     return (
       <div className="bg-white border border-zinc-200 rounded-xl p-12 text-center">
@@ -17,7 +21,9 @@ export function BookingApprovalTable({ bookings, onApprove, onReject }: BookingA
           <Inbox className="w-5 h-5" />
         </div>
         <h3 className="text-sm font-semibold text-zinc-900">All caught up</h3>
-        <p className="text-xs text-zinc-500 mt-1">There are no pending room reservation requests awaiting approval.</p>
+        <p className="text-xs text-zinc-500 mt-1">
+          There are no pending room reservation requests awaiting approval.
+        </p>
       </div>
     );
   }
@@ -41,19 +47,39 @@ export function BookingApprovalTable({ bookings, onApprove, onReject }: BookingA
               const end = new Date(b.end_time);
 
               return (
-                <tr key={b.id} className="hover:bg-zinc-50/50 transition-colors">
+                <tr
+                  key={b.id}
+                  className="hover:bg-zinc-50/50 transition-colors"
+                >
                   <td className="py-3.5 px-4">
                     <div className="font-semibold text-zinc-900">{b.title}</div>
-                    <div className="text-[11px] text-zinc-400 font-mono">{b.id}</div>
+                    <div className="text-[11px] text-zinc-400 font-mono">
+                      {b.id}
+                    </div>
                   </td>
                   <td className="py-3.5 px-4 font-mono text-xs text-zinc-500 truncate max-w-[140px]">
                     {b.user_id}
                   </td>
                   <td className="py-3.5 px-4 text-xs text-zinc-600">
-                    <div>{start.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
+                    <div>
+                      {start.toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </div>
                     <div className="text-zinc-400">
-                      {start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} –{" "}
-                      {end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      {start.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        timeZone: "UTC",
+                      })}{" "}
+                      –{" "}
+                      {end.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        timeZone: "UTC",
+                      })}
                     </div>
                   </td>
                   <td className="py-3.5 px-4">
