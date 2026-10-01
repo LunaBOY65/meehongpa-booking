@@ -15,6 +15,7 @@ client/src/
 │   │   └── register/
 │   │       └── page.tsx
 │   ├── admin/
+│   │   ├── layout.tsx
 │   │   ├── analytics/
 │   │   │   └── page.tsx
 │   │   ├── bookings/
@@ -56,6 +57,7 @@ client/src/
 │   │   ├── BookingRejectModal.tsx
 │   │   └── CheckInForm.tsx
 │   ├── layout/
+│   │   ├── AuthProvider.tsx
 │   │   ├── Navbar.tsx
 │   │   └── Sidebar.tsx
 │   ├── rooms/
@@ -91,7 +93,7 @@ client/src/
 
 ## Page & Component to Backend API Mapping
 
-The table below maps each scaffolded Page (Route) and Component to its specific purpose and corresponding backend API endpoints (covering all 22 Core API Endpoints).
+The table below maps each Page (Route) and Component to its purpose and corresponding backend API endpoints.
 
 ### 1. App Routes (Pages)
 
@@ -102,7 +104,7 @@ The table below maps each scaffolded Page (Route) and Component to its specific 
 | **Register** | `src/app/(auth)/register/page.tsx` | User registration screen | `POST /auth/register` |
 | **User Profile** | `src/app/profile/page.tsx` | Displays current logged-in user details and status | `GET /users/me` |
 | **Rooms Catalog** | `src/app/rooms/page.tsx` | Lists available meeting rooms with search and filters | `GET /rooms` |
-| **Room Detail & Booking** | `src/app/rooms/[id]/page.tsx` | View room details, availability schedule, and reserve | `GET /rooms/{id}`<br>`GET /bookings`<br>`POST /bookings` |
+| **Room Detail & Booking** | `src/app/rooms/[id]/page.tsx` | View room details, availability schedule, and reserve | `GET /rooms/{id}`<br>`GET /bookings/availability`<br>`POST /bookings` |
 | **My Bookings** | `src/app/bookings/page.tsx` | View personal reservation history and cancel bookings | `GET /bookings`<br>`GET /bookings/{id}`<br>`POST /bookings/{id}/cancel` |
 | **Check-In Kiosk** | `src/app/bookings/check-in/page.tsx` | Kiosk / web check-in with 6-digit access PIN | `POST /bookings/check-in` |
 | **Admin Rooms** | `src/app/admin/rooms/page.tsx` | Admin management console for creating, updating, deleting rooms | `GET /rooms`<br>`POST /rooms`<br>`PATCH /rooms/{id}`<br>`DELETE /rooms/{id}` |
@@ -111,6 +113,18 @@ The table below maps each scaffolded Page (Route) and Component to its specific 
 | **Admin Analytics** | `src/app/admin/analytics/page.tsx` | Reporting dashboard for utilization, summary stats, lockouts | `GET /analytics/summary`<br>`GET /analytics/room-utilization`<br>`GET /analytics/user-lockouts` |
 
 ---
+
+### Role-based access
+
+The frontend loads the authenticated user's profile through `AuthProvider` and shares it with the navigation and page layout:
+
+- **MEMBER** is the default role assigned during registration. Members can browse rooms, create bookings, view or cancel their own bookings, and view their own profile. The sidebar does not show Administration links.
+- **ADMIN** can use the administration pages for room management, booking approvals, user management, and analytics. The sidebar shows Administration links only after the user's role has been verified.
+- `src/app/admin/layout.tsx` redirects unauthenticated users to sign in and non-admin users to the workspace home page. This is a frontend navigation guard, not the security boundary.
+- The backend independently enforces authorization. Members cannot use booking or user profile endpoints to read another member's records, and administrative user-management, booking-approval, and analytics endpoints require the ADMIN role. The room availability endpoint returns occupied time ranges and statuses, not booking titles or other booking details.
+- The check-in form uses the kiosk check-in endpoint; its response includes only the check-in result and does not return the booking's access PIN.
+
+Do not rely on hidden links or frontend redirects to secure data. The API must continue to enforce role and record ownership for every protected operation.
 
 ### 2. Components
 
@@ -128,7 +142,7 @@ The table below maps each scaffolded Page (Route) and Component to its specific 
 | **RoomFormModal** | `src/components/rooms/RoomFormModal.tsx` | Form modal for creating a new room or updating existing room | `POST /rooms`<br>`PATCH /rooms/{id}` |
 | **RoomDeleteDialog** | `src/components/rooms/RoomDeleteDialog.tsx` | Confirmation dialog to remove or archive a meeting room | `DELETE /rooms/{id}` |
 | **BookingList** | `src/components/bookings/BookingList.tsx` | List of user's reservations with status tags | `GET /bookings` |
-| **BookingCalendar** | `src/components/bookings/BookingCalendar.tsx` | Calendar schedule timeline rendering room bookings by date | `GET /bookings` |
+| **BookingCalendar** | `src/components/bookings/BookingCalendar.tsx` | Calendar schedule timeline rendering occupied time ranges without exposing booking details | `GET /bookings/availability` |
 | **BookingDetailModal** | `src/components/bookings/BookingDetailModal.tsx` | Modal presenting reservation details and access PIN if approved | `GET /bookings/{id}` |
 | **BookingForm** | `src/components/bookings/BookingForm.tsx` | Reservation creation form with start/end time validation | `POST /bookings` |
 | **BookingApprovalTable** | `src/components/bookings/BookingApprovalTable.tsx` | Admin table displaying pending bookings awaiting approval | `GET /bookings` |
@@ -146,7 +160,7 @@ The table below maps each scaffolded Page (Route) and Component to its specific 
 
 ## Core API Endpoints Coverage Checklist
 
-All 22 endpoints defined in `server/README.md` are covered:
+The frontend integrates the core endpoints below, including the room availability endpoint:
 
 1. [x] `POST /auth/login` &rarr; `auth.service.ts` &bull; `LoginForm.tsx` &bull; `src/app/(auth)/login/page.tsx`
 2. [x] `POST /auth/register` &rarr; `auth.service.ts` &bull; `RegisterForm.tsx` &bull; `src/app/(auth)/register/page.tsx`
@@ -160,13 +174,14 @@ All 22 endpoints defined in `server/README.md` are covered:
 10. [x] `POST /rooms` &rarr; `room.service.ts` &bull; `RoomFormModal.tsx` &bull; `src/app/admin/rooms/page.tsx`
 11. [x] `PATCH /rooms/{id}` &rarr; `room.service.ts` &bull; `RoomFormModal.tsx` &bull; `src/app/admin/rooms/page.tsx`
 12. [x] `DELETE /rooms/{id}` &rarr; `room.service.ts` &bull; `RoomDeleteDialog.tsx` &bull; `src/app/admin/rooms/page.tsx`
-13. [x] `GET /bookings` &rarr; `booking.service.ts` &bull; `BookingList.tsx`, `BookingCalendar.tsx`, `BookingApprovalTable.tsx` &bull; `src/app/bookings/page.tsx`, `src/app/rooms/[id]/page.tsx`, `src/app/admin/bookings/page.tsx`
-14. [x] `GET /bookings/{id}` &rarr; `booking.service.ts` &bull; `BookingDetailModal.tsx` &bull; `src/app/bookings/page.tsx`
-15. [x] `POST /bookings` &rarr; `booking.service.ts` &bull; `BookingForm.tsx` &bull; `src/app/rooms/[id]/page.tsx`
-16. [x] `POST /bookings/{id}/approve` &rarr; `booking.service.ts` &bull; `BookingApproveModal.tsx` &bull; `src/app/admin/bookings/page.tsx`
-17. [x] `POST /bookings/{id}/reject` &rarr; `booking.service.ts` &bull; `BookingRejectModal.tsx` &bull; `src/app/admin/bookings/page.tsx`
-18. [x] `POST /bookings/{id}/cancel` &rarr; `booking.service.ts` &bull; `BookingCancelModal.tsx` &bull; `src/app/bookings/page.tsx`
-19. [x] `POST /bookings/check-in` &rarr; `booking.service.ts` &bull; `CheckInForm.tsx` &bull; `src/app/bookings/check-in/page.tsx`
-20. [x] `GET /analytics/summary` &rarr; `analytics.service.ts` &bull; `AnalyticsSummaryCards.tsx` &bull; `src/app/admin/analytics/page.tsx`
-21. [x] `GET /analytics/room-utilization` &rarr; `analytics.service.ts` &bull; `RoomUtilizationChart.tsx` &bull; `src/app/admin/analytics/page.tsx`
-22. [x] `GET /analytics/user-lockouts` &rarr; `analytics.service.ts` &bull; `UserLockoutTable.tsx` &bull; `src/app/admin/analytics/page.tsx`
+13. [x] `GET /bookings` &rarr; `booking.service.ts` &bull; `BookingList.tsx`, `BookingApprovalTable.tsx` &bull; `src/app/bookings/page.tsx`, `src/app/admin/bookings/page.tsx`
+14. [x] `GET /bookings/availability` &rarr; `booking.service.ts` &bull; `BookingCalendar.tsx` &bull; `src/app/rooms/[id]/page.tsx`
+15. [x] `GET /bookings/{id}` &rarr; `booking.service.ts` &bull; `BookingDetailModal.tsx` &bull; `src/app/bookings/page.tsx`
+16. [x] `POST /bookings` &rarr; `booking.service.ts` &bull; `BookingForm.tsx` &bull; `src/app/rooms/[id]/page.tsx`
+17. [x] `POST /bookings/{id}/approve` &rarr; `booking.service.ts` &bull; `BookingApproveModal.tsx` &bull; `src/app/admin/bookings/page.tsx`
+18. [x] `POST /bookings/{id}/reject` &rarr; `booking.service.ts` &bull; `BookingRejectModal.tsx` &bull; `src/app/admin/bookings/page.tsx`
+19. [x] `POST /bookings/{id}/cancel` &rarr; `booking.service.ts` &bull; `BookingCancelModal.tsx` &bull; `src/app/bookings/page.tsx`
+20. [x] `POST /bookings/check-in` &rarr; `booking.service.ts` &bull; `CheckInForm.tsx` &bull; `src/app/bookings/check-in/page.tsx`
+21. [x] `GET /analytics/summary` &rarr; `analytics.service.ts` &bull; `AnalyticsSummaryCards.tsx` &bull; `src/app/admin/analytics/page.tsx`
+22. [x] `GET /analytics/room-utilization` &rarr; `analytics.service.ts` &bull; `RoomUtilizationChart.tsx` &bull; `src/app/admin/analytics/page.tsx`
+23. [x] `GET /analytics/user-lockouts` &rarr; `analytics.service.ts` &bull; `UserLockoutTable.tsx` &bull; `src/app/admin/analytics/page.tsx`
