@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import type { Booking } from "@/types";
+import type { BookingAvailability } from "@/types";
 import { Calendar, Lock, CheckCircle2 } from "lucide-react";
 
 interface BookingCalendarProps {
-  bookings: Booking[];
+  bookings: BookingAvailability[];
   selectedDate: string;
   onDateChange: (date: string) => void;
 }
@@ -61,12 +61,7 @@ export function BookingCalendar({
           const matchingBookings = bookings.filter((b) => {
             const start = new Date(b.start_time);
             const end = new Date(b.end_time);
-            return (
-              start < slotEnd &&
-              end > slotStart &&
-              b.status !== "CANCELLED" &&
-              b.status !== "REJECTED"
-            );
+            return start < slotEnd && end > slotStart;
           });
 
           const isOccupied = matchingBookings.length > 0;
@@ -87,9 +82,7 @@ export function BookingCalendar({
                   <div className="flex items-center justify-between gap-2 flex-wrap">
                     <div className="flex items-center gap-1.5 truncate">
                       <Lock className="w-3 h-3 text-rose-600 shrink-0" />
-                      <span className="truncate">
-                        {matchingBookings.map((mb) => mb.title).join(", ")}
-                      </span>
+                      <span className="truncate">Reserved</span>
                     </div>
                     <span className="text-[10px] text-rose-700 bg-rose-100/70 px-1.5 py-0.2 rounded font-mono shrink-0">
                       Reserved

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { bookingService } from "@/services/booking.service";
-import type { Booking } from "@/types";
+import type { CheckInResult } from "@/types";
 import {
   KeyRound,
   CheckCircle2,
@@ -16,7 +16,7 @@ export function CheckInForm() {
   const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [successBooking, setSuccessBooking] = useState<Booking | null>(null);
+  const [successBooking, setSuccessBooking] = useState<CheckInResult | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

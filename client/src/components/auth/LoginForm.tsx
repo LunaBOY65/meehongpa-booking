@@ -4,10 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { authService } from "@/services/auth.service";
+import { useAuth } from "@/components/layout/AuthProvider";
 import { Loader2, AlertCircle, ArrowRight } from "lucide-react";
 
 export function LoginForm() {
   const router = useRouter();
+  const { refreshUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -20,6 +22,7 @@ export function LoginForm() {
 
     try {
       await authService.login({ email, password });
+      await refreshUser();
       router.push("/rooms");
     } catch (err: unknown) {
       if (err instanceof Error) {
