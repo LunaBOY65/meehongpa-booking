@@ -7,7 +7,7 @@ import { bookingService } from "@/services/booking.service";
 import { RoomDetailCard } from "@/components/rooms/RoomDetailCard";
 import { BookingCalendar } from "@/components/bookings/BookingCalendar";
 import { BookingForm } from "@/components/bookings/BookingForm";
-import type { Room, Booking, CreateBookingRequest } from "@/types";
+import type { Room, BookingAvailability, CreateBookingRequest } from "@/types";
 import { ArrowLeft, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 
 export default function RoomDetailPage({
@@ -18,7 +18,7 @@ export default function RoomDetailPage({
   const { id } = use(params);
 
   const [room, setRoom] = useState<Room | null>(null);
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [bookings, setBookings] = useState<BookingAvailability[]>([]);
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
@@ -34,10 +34,7 @@ export default function RoomDetailPage({
       try {
         const [roomData, bookingList] = await Promise.all([
           roomService.getRoomById(id),
-          bookingService.getBookings({
-            room_id: id,
-            date: selectedDate,
-          }),
+          bookingService.getAvailability(id, selectedDate),
         ]);
 
         if (isMounted) {
@@ -66,10 +63,7 @@ export default function RoomDetailPage({
   const handleDateChange = async (newDate: string) => {
     setSelectedDate(newDate);
     try {
-      const bookingList = await bookingService.getBookings({
-        room_id: id,
-        date: newDate,
-      });
+      const bookingList = await bookingService.getAvailability(id, newDate);
       setBookings(bookingList);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to load schedule for date");
@@ -87,10 +81,7 @@ export default function RoomDetailPage({
     }
 
     // Refresh bookings after reservation
-    const bookingList = await bookingService.getBookings({
-      room_id: id,
-      date: selectedDate,
-    });
+    const bookingList = await bookingService.getAvailability(id, selectedDate);
     setBookings(bookingList);
   };
 
