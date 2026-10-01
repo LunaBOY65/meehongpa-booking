@@ -2,55 +2,17 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useAuth } from "@/components/layout/AuthProvider";
 import { authService } from "@/services/auth.service";
-import { userService } from "@/services/user.service";
-import type { User } from "@/types";
 import { Building2, LogOut, LogIn, UserPlus } from "lucide-react";
 
 export function Navbar() {
   const router = useRouter();
-  const [isAuth, setIsAuth] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function initAuth() {
-      const authed = authService.isAuthenticated();
-      if (!authed) {
-        if (isMounted) {
-          setIsAuth(false);
-          setUser(null);
-        }
-        return;
-      }
-
-      try {
-        const currentUser = await userService.getCurrentUser();
-        if (isMounted) {
-          setUser(currentUser);
-          setIsAuth(true);
-        }
-      } catch {
-        if (isMounted) {
-          setIsAuth(false);
-          setUser(null);
-        }
-      }
-    }
-
-    initAuth();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const { user, clearUser } = useAuth();
 
   const handleLogout = () => {
     authService.logout();
-    setIsAuth(false);
-    setUser(null);
+    clearUser();
     router.push("/login");
   };
 
@@ -70,7 +32,7 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-3 text-sm">
-          {isAuth ? (
+          {user ? (
             <div className="flex items-center gap-3">
               <Link
                 href="/profile"

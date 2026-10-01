@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/components/layout/AuthProvider";
 import {
   LayoutDashboard,
   DoorOpen,
@@ -16,6 +17,7 @@ import {
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { user } = useAuth();
 
   const userNavItems = [
     { label: "Overview", href: "/", icon: LayoutDashboard },
@@ -60,31 +62,33 @@ export function Sidebar() {
         </nav>
       </div>
 
-      <div>
-        <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-2 px-2.5">
-          Administration
+      {user?.role === "ADMIN" && (
+        <div>
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-2 px-2.5">
+            Administration
+          </div>
+          <nav className="space-y-0.5">
+            {adminNavItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm transition-colors ${
+                    isActive
+                      ? "bg-zinc-100 text-zinc-900 font-medium"
+                      : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50"
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 ${isActive ? "text-zinc-900" : "text-zinc-400"}`} />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
         </div>
-        <nav className="space-y-0.5">
-          {adminNavItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm transition-colors ${
-                  isActive
-                    ? "bg-zinc-100 text-zinc-900 font-medium"
-                    : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50"
-                }`}
-              >
-                <Icon className={`w-4 h-4 ${isActive ? "text-zinc-900" : "text-zinc-400"}`} />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
+      )}
     </aside>
   );
 }
