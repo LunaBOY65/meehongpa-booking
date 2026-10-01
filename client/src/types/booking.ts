@@ -20,6 +20,19 @@ export interface Booking {
   created_at: string;
 }
 
+export interface BookingAvailability {
+  start_time: string;
+  end_time: string;
+  status: BookingStatus;
+}
+
+export interface CheckInResult {
+  id: string;
+  title: string;
+  status: BookingStatus;
+  checked_in_at: string | null;
+}
+
 export interface BookingFilterParams {
   user_id?: string;
   room_id?: string;

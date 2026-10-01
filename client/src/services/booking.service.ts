@@ -1,14 +1,23 @@
 import { apiClient } from "./api-client";
 import type {
   Booking,
+  BookingAvailability,
   BookingFilterParams,
   CreateBookingRequest,
   RejectBookingRequest,
   CancelBookingRequest,
   CheckInRequest,
+  CheckInResult,
 } from "@/types";
 
 export const bookingService = {
+  getAvailability: async (
+    roomId: string,
+    date: string,
+  ): Promise<BookingAvailability[]> => {
+    const query = new URLSearchParams({ room_id: roomId, date_str: date });
+    return apiClient<BookingAvailability[]>(`/bookings/availability?${query}`);
+  },
   getBookings: async (params?: BookingFilterParams): Promise<Booking[]> => {
     let queryString = "";
     if (params) {
@@ -55,8 +64,8 @@ export const bookingService = {
       body: JSON.stringify(data),
     });
   },
-  checkIn: async (data: CheckInRequest): Promise<Booking> => {
-    return apiClient<Booking>("/bookings/check-in", {
+  checkIn: async (data: CheckInRequest): Promise<CheckInResult> => {
+    return apiClient<CheckInResult>("/bookings/check-in", {
       method: "POST",
       body: JSON.stringify(data),
     });
