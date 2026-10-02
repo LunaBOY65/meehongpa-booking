@@ -21,11 +21,11 @@ import {
 } from "lucide-react";
 import { roomService } from "@/services/room.service";
 import { bookingService } from "@/services/booking.service";
-import { userService } from "@/services/user.service";
-import type { Room, Booking, User } from "@/types";
+import { useAuth } from "@/components/layout/AuthProvider";
+import type { Room, Booking } from "@/types";
 
 export default function HomePage() {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const { user: currentUser, loading: authLoading } = useAuth();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [upcomingBooking, setUpcomingBooking] = useState<Booking | null>(null);
   const [pendingCount, setPendingCount] = useState<number>(0);
@@ -34,68 +34,70 @@ export default function HomePage() {
   useEffect(() => {
     let isMounted = true;
 
-    async function loadDashboardData() {
-      try {
-        const [userRes, roomList] = await Promise.all([
-          userService.getCurrentUser().catch(() => null),
-          roomService.getRooms().catch(() => []),
-        ]);
-
-        if (!isMounted) return;
-
-        if (userRes) {
-          setCurrentUser(userRes);
-
-          // Fetch user's bookings to get next upcoming meeting
-          const userBookings = await bookingService
-            .getBookings({ user_id: userRes.id })
-            .catch(() => []);
-
-          if (isMounted && userBookings.length > 0) {
-            // Find next upcoming active booking
-            const now = new Date();
-            const activeBookings = userBookings
-              .filter(
-                (b) =>
-                  (b.status === "APPROVED" ||
-                    b.status === "PENDING" ||
-                    b.status === "CHECKED_IN") &&
-                  new Date(b.end_time) > now,
-              )
-              .sort(
-                (a, b) =>
-                  new Date(a.start_time).getTime() -
-                  new Date(b.start_time).getTime(),
-              );
-
-            if (activeBookings.length > 0) {
-              setUpcomingBooking(activeBookings[0]);
-            }
-          }
-
-          // If admin, check pending approvals count
-          if (userRes.role === "ADMIN") {
-            const pendingList = await bookingService
-              .getBookings({ status: "PENDING" })
-              .catch(() => []);
-            if (isMounted) setPendingCount(pendingList.length);
-          }
-        }
-
-        if (isMounted) {
-          setRooms(roomList);
-        }
-      } catch {
-        // Graceful fallback for offline / unauthenticated states
-      }
-    }
-
-    loadDashboardData();
+    roomService
+      .getRooms()
+      .then((roomList) => {
+        if (isMounted) setRooms(roomList);
+      })
+      .catch(() => {
+        if (isMounted) setRooms([]);
+      });
 
     return () => {
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (authLoading) return;
+
+    let isMounted = true;
+    if (!currentUser) {
+      return () => {
+        isMounted = false;
+      };
+    }
+    const userId = currentUser.id;
+    const isAdmin = currentUser.role === "ADMIN";
+
+    async function loadUserBookings() {
+      const userBookings = await bookingService
+        .getBookings({ user_id: userId })
+        .catch(() => []);
+
+      if (isMounted) {
+        const now = new Date();
+        const activeBookings = userBookings
+          .filter(
+            (booking) =>
+              (booking.status === "APPROVED" ||
+                booking.status === "PENDING" ||
+                booking.status === "CHECKED_IN") &&
+              new Date(booking.end_time) > now,
+          )
+          .sort(
+            (a, b) =>
+              new Date(a.start_time).getTime() -
+              new Date(b.start_time).getTime(),
+          );
+
+        setUpcomingBooking(activeBookings[0] ?? null);
+      }
+
+      if (isAdmin) {
+        const pendingList = await bookingService
+          .getBookings({ status: "PENDING" })
+          .catch(() => []);
+        if (isMounted) setPendingCount(pendingList.length);
+      }
+    }
+
+    void loadUserBookings();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentUser, authLoading]);
 
   const activeRoomsCount = rooms.filter((r) => r.is_active).length;
 

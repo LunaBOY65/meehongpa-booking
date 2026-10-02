@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -26,6 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const initialUserRequest = useRef<Promise<User | null> | null>(null);
 
   const refreshUser = useCallback(async () => {
     setError(null);
@@ -52,28 +54,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let isMounted = true;
 
-    async function initializeAuth() {
-      try {
-        const currentUser = authService.isAuthenticated()
-          ? await userService.getCurrentUser()
-          : null;
+    if (initialUserRequest.current === null) {
+      initialUserRequest.current = Promise.resolve().then(() =>
+        authService.isAuthenticated() ? userService.getCurrentUser() : null,
+      );
+    }
+
+    initialUserRequest.current
+      .then((currentUser) => {
         if (isMounted) {
           setUser(currentUser);
           setError(null);
         }
-      } catch (err: unknown) {
+      })
+      .catch((err: unknown) => {
         if (isMounted) {
           setUser(null);
           setError(
             err instanceof Error ? err.message : "Unable to verify your session",
           );
         }
-      } finally {
+      })
+      .finally(() => {
         if (isMounted) setLoading(false);
-      }
-    }
-
-    void initializeAuth();
+      });
 
     return () => {
       isMounted = false;
