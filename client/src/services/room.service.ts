@@ -7,6 +7,8 @@ import type {
   UpdateRoomRequest,
 } from "@/types";
 
+import { API_BASE_URL } from "./api-client";
+
 export const roomService = {
   getRooms: async (params?: RoomFilterParams): Promise<Room[]> => {
     // แปลง object params เป็น query string เช่น ?building=TowerA
@@ -40,9 +42,20 @@ export const roomService = {
       body: JSON.stringify(data),
     });
   },
+  uploadRoomImage: async (id: string, image: File): Promise<Room> => {
+    return apiClient<Room>(`/rooms/${id}/image`, {
+      method: "PUT",
+      headers: { "Content-Type": image.type },
+      body: image,
+    });
+  },
   deleteRoom: async (id: string): Promise<void> => {
     return apiClient<void>(`/rooms/${id}`, {
       method: "DELETE",
     });
   },
 };
+
+export function getRoomImageUrl(imageUrl: string): string {
+  return `${API_BASE_URL}${imageUrl}`;
+}

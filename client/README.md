@@ -107,7 +107,7 @@ The table below maps each Page (Route) and Component to its purpose and correspo
 | **Room Detail & Booking** | `src/app/rooms/[id]/page.tsx` | View room details, availability schedule, and reserve | `GET /rooms/{id}`<br>`GET /bookings/availability`<br>`POST /bookings` |
 | **My Bookings** | `src/app/bookings/page.tsx` | View personal reservation history and cancel bookings | `GET /bookings`<br>`GET /bookings/{id}`<br>`POST /bookings/{id}/cancel` |
 | **Check-In Kiosk** | `src/app/bookings/check-in/page.tsx` | Kiosk / web check-in with 6-digit access PIN | `POST /bookings/check-in` |
-| **Admin Rooms** | `src/app/admin/rooms/page.tsx` | Admin management console for creating, updating, deleting rooms | `GET /rooms`<br>`POST /rooms`<br>`PATCH /rooms/{id}`<br>`DELETE /rooms/{id}` |
+| **Admin Rooms** | `src/app/admin/rooms/page.tsx` | Admin management console for creating, updating, deleting rooms, and uploading room photos | `GET /rooms`<br>`POST /rooms`<br>`PATCH /rooms/{id}`<br>`PUT /rooms/{id}/image`<br>`DELETE /rooms/{id}` |
 | **Admin Bookings** | `src/app/admin/bookings/page.tsx` | Admin approval queue to approve or reject pending reservations | `GET /bookings`<br>`POST /bookings/{id}/approve`<br>`POST /bookings/{id}/reject` |
 | **Admin Users** | `src/app/admin/users/page.tsx` | Admin user directory, role assignments, and account unlock | `GET /users`<br>`GET /users/{id}`<br>`PATCH /users/{id}`<br>`DELETE /users/{id}` |
 | **Admin Analytics** | `src/app/admin/analytics/page.tsx` | Reporting dashboard for utilization, summary stats, lockouts | `GET /analytics/summary`<br>`GET /analytics/room-utilization`<br>`GET /analytics/user-lockouts` |

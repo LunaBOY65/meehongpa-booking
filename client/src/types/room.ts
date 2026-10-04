@@ -6,6 +6,7 @@ export interface Room {
   floor: string;
   requires_approval: boolean;
   is_active: boolean;
+  image_url: string | null;
   created_at: string;
 }
 
