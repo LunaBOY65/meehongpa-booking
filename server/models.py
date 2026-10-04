@@ -20,6 +20,7 @@ class Room(SQLModel, table=True):
     floor: str
     requires_approval: bool = False
     is_active: bool = True
+    image_url: Optional[str] = None
     created_at: Optional[datetime] = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )

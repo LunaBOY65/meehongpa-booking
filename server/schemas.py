@@ -68,6 +68,7 @@ class RoomUpdate(BaseModel):
 class RoomOut(RoomCreate):
     id: uuid.UUID
     is_active: bool
+    image_url: Optional[str] = None
     created_at: datetime
 
 

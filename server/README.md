@@ -21,6 +21,7 @@ building VARCHAR(50) NOT NULL,
 floor VARCHAR(20) NOT NULL,
 requires_approval BOOLEAN DEFAULT FALSE,
 is_active BOOLEAN DEFAULT TRUE,
+image_url VARCHAR,
 created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -100,8 +101,13 @@ CREATE INDEX idx_bookings_time ON bookings (room_id, start_time, end_time);
 - `PATCH /rooms/{id}`
   - **Description:** _(Admin)_ Updates room attributes or toggles availability (`is_active`).
   - **Payload:** Partial room fields.
+- `PUT /rooms/{id}/image`
+  - **Description:** _(Admin)_ Uploads or replaces a room photo (JPG, PNG, GIF, or WEBP; maximum 5 MB). The room response includes its `image_url`; the image is served from `/uploads/{filename}`.
+  - **Request:** Raw image bytes with the matching `Content-Type` header (for example, `image/jpeg`).
 - `DELETE /rooms/{id}`
   - **Description:** _(Admin)_ Deletes or archives a room record.
+
+Room image files are stored in `server/uploads/`. Keep this directory on persistent storage in deployments; an ephemeral application filesystem will lose uploaded photos when the instance is replaced.
 
 #### 3. Bookings & Lifecycle Management
 

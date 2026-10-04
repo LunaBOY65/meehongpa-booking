@@ -1,13 +1,17 @@
 import calendar
 from datetime import datetime, date, timezone, timedelta
+import logging
+from pathlib import Path
 import random
 from typing import Annotated, Optional
 import uuid
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.staticfiles import StaticFiles
 import jwt
+from sqlalchemy import inspect, text
 from sqlmodel import Session, select, col, SQLModel
 
 from database import engine, get_session
@@ -39,7 +43,17 @@ from schemas import (
 # สร้าง Table ใน Database หากยังไม่มี
 SQLModel.metadata.create_all(engine)
 
+logger = logging.getLogger(__name__)
+UPLOAD_DIR = Path(__file__).resolve().parent / "uploads"
+UPLOAD_DIR.mkdir(exist_ok=True)
+
+# เพิ่มคอลัมน์ให้ฐานข้อมูลเดิมที่สร้างก่อนมีฟีเจอร์รูปห้อง
+if "image_url" not in {column["name"] for column in inspect(engine).get_columns("rooms")}:
+    with engine.begin() as connection:
+        connection.execute(text("ALTER TABLE rooms ADD COLUMN image_url VARCHAR"))
+
 app = FastAPI(title="Meeting Room Booking API")
+app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
 # อนุญาตให้ Frontend (Next.js) คุยกับ FastAPI ได้
 origins = [
@@ -89,6 +103,20 @@ def require_admin(current_user: CurrentUserDep) -> User:
     return current_user
 
 AdminDep = Annotated[User, Depends(require_admin)]
+
+
+def remove_room_image(image_url: Optional[str]) -> None:
+    if not image_url:
+        return
+
+    image_path = (UPLOAD_DIR / Path(image_url).name).resolve()
+    if image_path.parent != UPLOAD_DIR.resolve():
+        return
+
+    try:
+        image_path.unlink(missing_ok=True)
+    except OSError:
+        logger.exception("Could not remove room image %s", image_path)
 
 
 @app.get("/")
@@ -269,14 +297,74 @@ def update_room(id: uuid.UUID, room_data: RoomUpdate, session: SessionDep, admin
     return room
 
 
+# API อัปโหลดหรือเปลี่ยนรูปห้องประชุม (Admin เท่านั้น)
+@app.put("/rooms/{id}/image", response_model=RoomOut)
+async def upload_room_image(
+    id: uuid.UUID,
+    request: Request,
+    session: SessionDep,
+    admin: AdminDep,
+):
+    room = session.get(Room, id)
+    if not room:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="ไม่พบห้องประชุมนี้")
+
+    content_type = request.headers.get("content-type", "").split(";", maxsplit=1)[0].lower()
+    image_formats = {
+        "image/jpeg": (b"\xff\xd8\xff", ".jpg"),
+        "image/png": (b"\x89PNG\r\n\x1a\n", ".png"),
+        "image/gif": (b"GIF8", ".gif"),
+        "image/webp": (b"RIFF", ".webp"),
+    }
+    if content_type not in image_formats:
+        raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail="รองรับไฟล์ JPG, PNG, GIF และ WEBP เท่านั้น")
+
+    content_length = request.headers.get("content-length")
+    if content_length and content_length.isdigit() and int(content_length) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="ขนาดรูปต้องไม่เกิน 5 MB")
+
+    image_chunks = []
+    image_size = 0
+    async for chunk in request.stream():
+        image_size += len(chunk)
+        if image_size > 5 * 1024 * 1024:
+            raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="ขนาดรูปต้องไม่เกิน 5 MB")
+        image_chunks.append(chunk)
+    image_data = b"".join(image_chunks)
+    if not image_data:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="ไม่พบข้อมูลรูปภาพ")
+
+    signature, extension = image_formats[content_type]
+    if not image_data.startswith(signature):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="ชนิดไฟล์รูปไม่ถูกต้อง")
+    if content_type == "image/webp" and image_data[8:12] != b"WEBP":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="ชนิดไฟล์รูปไม่ถูกต้อง")
+
+    image_path = UPLOAD_DIR / f"{uuid.uuid4()}{extension}"
+    image_path.write_bytes(image_data)
+    previous_image_url = room.image_url
+    room.image_url = f"/uploads/{image_path.name}"
+    session.add(room)
+    try:
+        session.commit()
+        session.refresh(room)
+    except Exception:
+        image_path.unlink(missing_ok=True)
+        raise
+    remove_room_image(previous_image_url)
+    return room
+
+
 # API ลบห้องประชุม (Admin เท่านั้น)
 @app.delete("/rooms/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_room(id: uuid.UUID, session: SessionDep, admin: AdminDep):
     room = session.get(Room, id)
     if not room:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="ไม่พบห้องประชุมนี้")
+    image_url = room.image_url
     session.delete(room)
     session.commit()
+    remove_room_image(image_url)
     return None
 
 
