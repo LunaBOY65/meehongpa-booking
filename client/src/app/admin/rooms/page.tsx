@@ -67,12 +67,27 @@ export default function AdminRoomsPage() {
 
   const handleSaveRoom = async (
     data: CreateRoomRequest | UpdateRoomRequest,
-    id?: string
+    id?: string,
+    image?: File
   ) => {
+    let savedRoom: Room;
     if (id) {
-      await roomService.updateRoom(id, data as UpdateRoomRequest);
+      savedRoom = await roomService.updateRoom(id, data as UpdateRoomRequest);
     } else {
-      await roomService.createRoom(data as CreateRoomRequest);
+      savedRoom = await roomService.createRoom(data as CreateRoomRequest);
+    }
+    if (image) {
+      try {
+        await roomService.uploadRoomImage(savedRoom.id, image);
+      } catch (err: unknown) {
+        setSelectedRoom(savedRoom);
+        await refreshRooms();
+        throw new Error(
+          `Room details were saved, but the photo could not be uploaded: ${
+            err instanceof Error ? err.message : "Unknown error"
+          }`
+        );
+      }
     }
     await refreshRooms();
   };
