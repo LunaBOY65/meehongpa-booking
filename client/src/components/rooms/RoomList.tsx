@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import type { Room } from "@/types";
+import { getRoomImageUrl } from "@/services/room.service";
 import { DoorOpen, Users, MapPin, ShieldAlert, ArrowRight, Edit3, Trash2, CheckCircle2 } from "lucide-react";
 
 interface RoomListProps {
@@ -31,83 +33,96 @@ export function RoomList({ rooms, isAdmin, onEdit, onDelete }: RoomListProps) {
       {rooms.map((room) => (
         <div
           key={room.id}
-          className="bg-white border border-zinc-200/90 rounded-xl p-5 shadow-xs hover:border-zinc-300 hover:shadow-sm transition-all flex flex-col justify-between group"
+          className="bg-white border border-zinc-200/90 rounded-xl overflow-hidden shadow-xs hover:border-zinc-300 hover:shadow-sm transition-all flex flex-col justify-between group"
         >
-          <div>
-            <div className="flex items-start justify-between gap-3 mb-3">
-              <div>
-                <h3 className="text-base font-semibold text-zinc-900 tracking-tight group-hover:text-blue-600 transition-colors">
-                  {room.name}
-                </h3>
-                <p className="text-xs text-zinc-500 flex items-center gap-1.5 mt-0.5">
-                  <MapPin className="w-3.5 h-3.5 text-zinc-400" />
-                  <span>{room.building} &bull; Floor {room.floor}</span>
-                </p>
+          {room.image_url && (
+            <div className="relative h-44 w-full bg-zinc-100">
+              <Image
+                src={getRoomImageUrl(room.image_url)}
+                alt={`${room.name} room`}
+                fill
+                unoptimized
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                className="object-cover"
+              />
+            </div>
+          )}
+          <div className="p-5 flex flex-1 flex-col justify-between">
+            <div>
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div>
+                  <h3 className="text-base font-semibold text-zinc-900 tracking-tight group-hover:text-blue-600 transition-colors">
+                    {room.name}
+                  </h3>
+                  <p className="text-xs text-zinc-500 flex items-center gap-1.5 mt-0.5">
+                    <MapPin className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>{room.building} &bull; Floor {room.floor}</span>
+                  </p>
+                </div>
+                <span
+                  className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${
+                    room.is_active
+                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                      : "bg-rose-50 text-rose-700 border border-rose-200"
+                  }`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${room.is_active ? "bg-emerald-500" : "bg-rose-500"}`} />
+                  {room.is_active ? "Available" : "Maintenance"}
+                </span>
               </div>
-              <span
-                className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${
-                  room.is_active
-                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                    : "bg-rose-50 text-rose-700 border border-rose-200"
-                }`}
+              <div className="flex items-center gap-4 py-3 border-y border-zinc-100 text-xs text-zinc-600 mb-4">
+                <div className="flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-zinc-400" />
+                  <span><strong className="text-zinc-900 font-semibold">{room.capacity}</strong> seats</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {room.requires_approval ? (
+                    <span className="text-amber-700 font-medium flex items-center gap-1">
+                      <ShieldAlert className="w-3.5 h-3.5" />
+                      Approval required
+                    </span>
+                  ) : (
+                    <span className="text-zinc-500 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      Instant booking
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <Link
+                href={`/rooms/${room.id}`}
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-900 hover:text-blue-600 transition-colors"
               >
-                <span className={`w-1.5 h-1.5 rounded-full ${room.is_active ? "bg-emerald-500" : "bg-rose-500"}`} />
-                {room.is_active ? "Available" : "Maintenance"}
-              </span>
+                <span>Schedule & Reserve</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+
+              {isAdmin && (
+                <div className="inline-flex items-center gap-1">
+                  {onEdit && (
+                    <button
+                      onClick={() => onEdit(room)}
+                      className="p-1.5 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-md transition-colors"
+                      title="Edit Room"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  {onDelete && (
+                    <button
+                      onClick={() => onDelete(room)}
+                      className="p-1.5 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                      title="Delete Room"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
-
-            <div className="flex items-center gap-4 py-3 border-y border-zinc-100 text-xs text-zinc-600 mb-4">
-              <div className="flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 text-zinc-400" />
-                <span><strong className="text-zinc-900 font-semibold">{room.capacity}</strong> seats</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                {room.requires_approval ? (
-                  <span className="text-amber-700 font-medium flex items-center gap-1">
-                    <ShieldAlert className="w-3.5 h-3.5" />
-                    Approval required
-                  </span>
-                ) : (
-                  <span className="text-zinc-500 flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                    Instant booking
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between pt-1">
-            <Link
-              href={`/rooms/${room.id}`}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-900 hover:text-blue-600 transition-colors"
-            >
-              <span>Schedule & Reserve</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-
-            {isAdmin && (
-              <div className="inline-flex items-center gap-1">
-                {onEdit && (
-                  <button
-                    onClick={() => onEdit(room)}
-                    className="p-1.5 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-md transition-colors"
-                    title="Edit Room"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" />
-                  </button>
-                )}
-                {onDelete && (
-                  <button
-                    onClick={() => onDelete(room)}
-                    className="p-1.5 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
-                    title="Delete Room"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-            )}
           </div>
         </div>
       ))}

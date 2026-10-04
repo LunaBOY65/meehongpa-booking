@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
 import type { Room, CreateRoomRequest, UpdateRoomRequest } from "@/types";
-import { X, Loader2, AlertCircle, Building2 } from "lucide-react";
+import { getRoomImageUrl } from "@/services/room.service";
+import { X, Loader2, AlertCircle, Building2, ImagePlus } from "lucide-react";
 
 interface RoomFormModalProps {
   room: Room | null;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: CreateRoomRequest | UpdateRoomRequest, id?: string) => Promise<void>;
+  onSave: (data: CreateRoomRequest | UpdateRoomRequest, id?: string, image?: File) => Promise<void>;
 }
 
 function RoomFormContent({
@@ -18,7 +20,7 @@ function RoomFormContent({
 }: {
   room: Room | null;
   onClose: () => void;
-  onSave: (data: CreateRoomRequest | UpdateRoomRequest, id?: string) => Promise<void>;
+  onSave: (data: CreateRoomRequest | UpdateRoomRequest, id?: string, image?: File) => Promise<void>;
 }) {
   const [name, setName] = useState(room?.name || "");
   const [capacity, setCapacity] = useState(room?.capacity || 10);
@@ -26,8 +28,19 @@ function RoomFormContent({
   const [floor, setFloor] = useState(room?.floor || "");
   const [requiresApproval, setRequiresApproval] = useState(room?.requires_approval || false);
   const [isActive, setIsActive] = useState(room?.is_active ?? true);
+  const [image, setImage] = useState<File | undefined>();
+  const imagePreview = useMemo(
+    () => image ? URL.createObjectURL(image) : room?.image_url ? getRoomImageUrl(room.image_url) : null,
+    [image, room]
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview?.startsWith("blob:")) URL.revokeObjectURL(imagePreview);
+    };
+  }, [imagePreview]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +57,8 @@ function RoomFormContent({
             requires_approval: requiresApproval,
             is_active: isActive,
           },
-          room.id
+          room.id,
+          image
         );
       } else {
         await onSave({
@@ -53,7 +67,7 @@ function RoomFormContent({
           building,
           floor,
           requires_approval: requiresApproval,
-        });
+        }, undefined, image);
       }
       onClose();
     } catch (err: unknown) {
@@ -143,6 +157,54 @@ function RoomFormContent({
               className="w-full px-3 py-2 text-sm bg-white border border-zinc-200 rounded-md text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors"
             />
           </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-zinc-700 mb-1.5">
+            Room Photo <span className="text-zinc-400">(optional, max 5 MB)</span>
+          </label>
+          <label className="flex items-center gap-3 p-3 border border-dashed border-zinc-300 rounded-lg cursor-pointer hover:bg-zinc-50">
+            {imagePreview ? (
+              <Image
+                src={imagePreview}
+                alt="Room preview"
+                width={96}
+                height={64}
+                unoptimized
+                className="h-16 w-24 rounded object-cover"
+              />
+            ) : (
+              <span className="h-16 w-24 rounded bg-zinc-100 flex items-center justify-center text-zinc-400">
+                <ImagePlus className="w-5 h-5" />
+              </span>
+            )}
+            <span className="text-xs text-zinc-600">
+              {image ? image.name : room?.image_url ? "Choose a new photo to replace the current one" : "Choose a room photo"}
+            </span>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              className="sr-only"
+              onChange={(event) => {
+                const selectedImage = event.target.files?.[0];
+                if (!selectedImage) return;
+                if (selectedImage.size > 5 * 1024 * 1024) {
+                  setImage(undefined);
+                  setError("Image must be 5 MB or smaller");
+                  event.target.value = "";
+                  return;
+                }
+                if (!["image/jpeg", "image/png", "image/gif", "image/webp"].includes(selectedImage.type)) {
+                  setImage(undefined);
+                  setError("Choose a JPG, PNG, GIF, or WEBP image");
+                  event.target.value = "";
+                  return;
+                }
+                setImage(selectedImage);
+                setError(null);
+              }}
+            />
+          </label>
         </div>
 
         <div className="pt-2 space-y-2.5">
