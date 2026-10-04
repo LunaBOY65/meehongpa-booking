@@ -23,7 +23,7 @@ export function LoginForm() {
     try {
       await authService.login({ email, password });
       await refreshUser();
-      router.push("/rooms");
+      router.push("/");
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
@@ -39,8 +39,12 @@ export function LoginForm() {
     <div className="w-full max-w-sm mx-auto">
       <div className="bg-white border border-zinc-200/80 rounded-xl p-6 sm:p-8 shadow-xs">
         <div className="mb-6">
-          <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Sign in to RoomDesk</h1>
-          <p className="text-xs text-zinc-500 mt-1">Enter your credentials to manage room bookings</p>
+          <h1 className="text-xl font-semibold tracking-tight text-zinc-900">
+            Sign in to RoomDesk
+          </h1>
+          <p className="text-xs text-zinc-500 mt-1">
+            Enter your credentials to manage room bookings
+          </p>
         </div>
 
         {error && (
@@ -102,7 +106,10 @@ export function LoginForm() {
 
         <div className="mt-6 pt-5 border-t border-zinc-100 text-center text-xs text-zinc-500">
           Don&apos;t have an account?{" "}
-          <Link href="/register" className="font-medium text-zinc-900 hover:underline">
+          <Link
+            href="/register"
+            className="font-medium text-zinc-900 hover:underline"
+          >
             Create account
           </Link>
         </div>
