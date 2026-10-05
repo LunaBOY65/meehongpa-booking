@@ -23,6 +23,7 @@ import { roomService } from "@/services/room.service";
 import { bookingService } from "@/services/booking.service";
 import { useAuth } from "@/components/layout/AuthProvider";
 import type { Room, Booking } from "@/types";
+import { formatUtcTime } from "@/utils/date-time";
 
 export default function HomePage() {
   const { user: currentUser, loading: authLoading } = useAuth();
@@ -198,22 +199,9 @@ export default function HomePage() {
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock className="w-3.5 h-3.5 text-zinc-400" />
-                        {new Date(
-                          upcomingBooking.start_time,
-                        ).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          timeZone: "UTC",
-                        })}{" "}
+                        {formatUtcTime(upcomingBooking.start_time)}{" "}
                         –{" "}
-                        {new Date(upcomingBooking.end_time).toLocaleTimeString(
-                          [],
-                          {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            timeZone: "UTC",
-                          },
-                        )}
+                        {formatUtcTime(upcomingBooking.end_time)}
                       </span>
                     </div>
                   </div>

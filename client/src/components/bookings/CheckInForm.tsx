@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { bookingService } from "@/services/booking.service";
 import type { CheckInResult } from "@/types";
+import { formatLocalTime } from "@/utils/date-time";
 import {
   KeyRound,
   CheckCircle2,
@@ -79,9 +80,7 @@ export function CheckInForm() {
             <p className="text-emerald-700 text-[11px]">
               Recorded at{" "}
               {successBooking.checked_in_at
-                ? new Date(successBooking.checked_in_at).toLocaleTimeString(
-                    "en-US",
-                  )
+                ? formatLocalTime(successBooking.checked_in_at)
                 : "Now"}
             </p>
           </div>

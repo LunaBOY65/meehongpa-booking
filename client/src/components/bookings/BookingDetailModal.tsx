@@ -1,6 +1,10 @@
 "use client";
 
 import type { Booking } from "@/types";
+import {
+  formatLocalDateTime,
+  formatUtcTime,
+} from "@/utils/date-time";
 import { X, CheckCircle2 } from "lucide-react";
 
 interface BookingDetailModalProps {
@@ -17,7 +21,6 @@ export function BookingDetailModal({
   if (!isOpen || !booking) return null;
 
   const start = new Date(booking.start_time);
-  const end = new Date(booking.end_time);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-xs">
@@ -56,17 +59,9 @@ export function BookingDetailModal({
                   year: "numeric",
                 })}{" "}
                 &bull;{" "}
-                {start.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  timeZone: "UTC",
-                })}{" "}
+                {formatUtcTime(booking.start_time)}{" "}
                 –{" "}
-                {end.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  timeZone: "UTC",
-                })}
+                {formatUtcTime(booking.end_time)}
               </span>
             </div>
           </div>
@@ -87,7 +82,7 @@ export function BookingDetailModal({
               <CheckCircle2 className="w-4 h-4 shrink-0" />
               <span>
                 Checked in at{" "}
-                {new Date(booking.checked_in_at).toLocaleString("en-US")}
+                {formatLocalDateTime(booking.checked_in_at)}
               </span>
             </div>
           )}

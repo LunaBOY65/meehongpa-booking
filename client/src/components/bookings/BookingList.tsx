@@ -1,6 +1,7 @@
 "use client";
 
 import type { Booking } from "@/types";
+import { formatUtcTime } from "@/utils/date-time";
 import {
   Calendar,
   Clock,
@@ -87,7 +88,6 @@ export function BookingList({
     <div className="space-y-3">
       {bookings.map((booking) => {
         const startDate = new Date(booking.start_time);
-        const endDate = new Date(booking.end_time);
 
         return (
           <div
@@ -113,17 +113,9 @@ export function BookingList({
                 </span>
                 <span className="flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5 text-zinc-400" />
-                  {startDate.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    timeZone: "UTC",
-                  })}{" "}
+                  {formatUtcTime(booking.start_time)}{" "}
                   –{" "}
-                  {endDate.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    timeZone: "UTC",
-                  })}
+                  {formatUtcTime(booking.end_time)}
                 </span>
               </div>
 

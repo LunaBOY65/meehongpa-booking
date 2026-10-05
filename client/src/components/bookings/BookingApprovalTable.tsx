@@ -1,6 +1,7 @@
 "use client";
 
 import type { Booking } from "@/types";
+import { formatUtcTime } from "@/utils/date-time";
 import { Clock, Check, X, Inbox } from "lucide-react";
 
 interface BookingApprovalTableProps {
@@ -44,7 +45,6 @@ export function BookingApprovalTable({
           <tbody className="divide-y divide-zinc-100 text-zinc-800">
             {bookings.map((b) => {
               const start = new Date(b.start_time);
-              const end = new Date(b.end_time);
 
               return (
                 <tr
@@ -69,17 +69,9 @@ export function BookingApprovalTable({
                       })}
                     </div>
                     <div className="text-zinc-400">
-                      {start.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        timeZone: "UTC",
-                      })}{" "}
+                      {formatUtcTime(b.start_time)}{" "}
                       –{" "}
-                      {end.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        timeZone: "UTC",
-                      })}
+                      {formatUtcTime(b.end_time)}
                     </div>
                   </td>
                   <td className="py-3.5 px-4">
