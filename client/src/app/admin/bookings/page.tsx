@@ -2,14 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { bookingService } from "@/services/booking.service";
+import { roomService } from "@/services/room.service";
+import { userService } from "@/services/user.service";
 import { BookingApprovalTable } from "@/components/bookings/BookingApprovalTable";
 import { BookingApproveModal } from "@/components/bookings/BookingApproveModal";
 import { BookingRejectModal } from "@/components/bookings/BookingRejectModal";
-import type { Booking } from "@/types";
+import type { Booking, Room, User } from "@/types";
 import { Loader2, AlertCircle } from "lucide-react";
 
 export default function AdminBookingsPage() {
   const [pendingBookings, setPendingBookings] = useState<Booking[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,11 +27,23 @@ export default function AdminBookingsPage() {
 
     async function loadInitialPending() {
       try {
-        const data = await bookingService.getBookings({ status: "PENDING" });
-        if (isMounted) setPendingBookings(data);
+        const [bookingsData, roomsData, usersData] = await Promise.all([
+          bookingService.getBookings({ status: "PENDING" }),
+          roomService.getRooms(),
+          userService.getUsers(),
+        ]);
+        if (isMounted) {
+          setPendingBookings(bookingsData);
+          setRooms(roomsData);
+          setUsers(usersData);
+        }
       } catch (err: unknown) {
         if (isMounted) {
-          setError(err instanceof Error ? err.message : "Failed to fetch pending requests");
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Failed to fetch pending requests",
+          );
         }
       } finally {
         if (isMounted) setLoading(false);
@@ -46,7 +62,11 @@ export default function AdminBookingsPage() {
       const data = await bookingService.getBookings({ status: "PENDING" });
       setPendingBookings(data);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to refresh pending bookings");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to refresh pending bookings",
+      );
     }
   };
 
@@ -73,8 +93,14 @@ export default function AdminBookingsPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Booking Approvals Queue</h1>
-        <p className="text-xs text-zinc-500 mt-0.5">Authorize or decline room reservations that require administrative confirmation</p>
+        <h1 className="text-xl font-semibold tracking-tight text-zinc-900">
+          Booking Approvals Queue
+        </h1>
+        <p className="text-xs text-zinc-500 mt-0.5">
+          Review room, requester, and schedule before approving or declining.
+          {!loading &&
+            ` ${pendingBookings.length} request${pendingBookings.length === 1 ? "" : "s"} pending.`}
+        </p>
       </div>
 
       {error && (
@@ -84,6 +110,7 @@ export default function AdminBookingsPage() {
         </div>
       )}
 
+      {/* เงื่อนไข(loading) ? ทำถ้าจริง : ทำถ้าเท็จ */}
       {loading ? (
         <div className="p-16 flex items-center justify-center text-zinc-400 gap-2 text-xs">
           <Loader2 className="w-4 h-4 animate-spin" />
@@ -92,6 +119,8 @@ export default function AdminBookingsPage() {
       ) : (
         <BookingApprovalTable
           bookings={pendingBookings}
+          rooms={rooms}
+          users={users}
           onApprove={handleOpenApprove}
           onReject={handleOpenReject}
         />

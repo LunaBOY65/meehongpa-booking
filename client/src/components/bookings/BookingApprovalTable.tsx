@@ -1,17 +1,22 @@
 "use client";
 
 import type { Booking } from "@/types";
+import type { Room, User } from "@/types";
 import { formatUtcTime } from "@/utils/date-time";
-import { Clock, Check, X, Inbox } from "lucide-react";
+import { Clock, Check, X, Inbox, MapPin, Users as UsersIcon } from "lucide-react";
 
 interface BookingApprovalTableProps {
   bookings: Booking[];
+  rooms: Room[];
+  users: User[];
   onApprove: (booking: Booking) => void;
   onReject: (booking: Booking) => void;
 }
 
 export function BookingApprovalTable({
   bookings,
+  rooms,
+  users,
   onApprove,
   onReject,
 }: BookingApprovalTableProps) {
@@ -29,6 +34,12 @@ export function BookingApprovalTable({
     );
   }
 
+  const roomsById = new Map(rooms.map((room) => [room.id, room]));
+  const usersById = new Map(users.map((user) => [user.id, user]));
+  const sortedBookings = [...bookings].sort(
+    (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
+  );
+
   return (
     <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-xs">
       <div className="overflow-x-auto">
@@ -36,15 +47,18 @@ export function BookingApprovalTable({
           <thead>
             <tr className="border-b border-zinc-200 bg-zinc-50/75 text-[12px] font-medium text-zinc-500 uppercase tracking-wider">
               <th className="py-3 px-4">Reservation Title</th>
-              <th className="py-3 px-4">User Ref</th>
+              <th className="py-3 px-4">Room</th>
+              <th className="py-3 px-4">Requested By</th>
               <th className="py-3 px-4">Time Window</th>
               <th className="py-3 px-4">Status</th>
               <th className="py-3 px-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100 text-zinc-800">
-            {bookings.map((b) => {
+            {sortedBookings.map((b) => {
               const start = new Date(b.start_time);
+              const room = roomsById.get(b.room_id);
+              const user = usersById.get(b.user_id);
 
               return (
                 <tr
@@ -53,12 +67,38 @@ export function BookingApprovalTable({
                 >
                   <td className="py-3.5 px-4">
                     <div className="font-semibold text-zinc-900">{b.title}</div>
-                    <div className="text-[11px] text-zinc-400 font-mono">
-                      {b.id}
-                    </div>
                   </td>
-                  <td className="py-3.5 px-4 font-mono text-xs text-zinc-500 truncate max-w-[140px]">
-                    {b.user_id}
+                  <td className="py-3.5 px-4 text-xs">
+                    <div className="font-medium text-zinc-800">
+                      {room?.name ?? "Room unavailable"}
+                    </div>
+                    {room && (
+                      <div className="mt-1 flex flex-col gap-1 text-[11px] text-zinc-500">
+                        <span className="inline-flex items-center gap-1">
+                          <MapPin className="h-3 w-3 shrink-0" />
+                          {room.building} · Floor {room.floor}
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <UsersIcon className="h-3 w-3 shrink-0" />
+                          Capacity {room.capacity}
+                        </span>
+                      </div>
+                    )}
+                  </td>
+                  <td className="py-3.5 px-4 text-xs">
+                    <div className="font-medium text-zinc-800">
+                      {user?.full_name ?? "User unavailable"}
+                    </div>
+                    {user?.email && (
+                      <div className="mt-1 text-[11px] text-zinc-500">
+                        {user.email}
+                      </div>
+                    )}
+                    {user?.department && (
+                      <div className="text-[11px] text-zinc-400">
+                        {user.department}
+                      </div>
+                    )}
                   </td>
                   <td className="py-3.5 px-4 text-xs text-zinc-600">
                     <div>
