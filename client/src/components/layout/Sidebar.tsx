@@ -35,7 +35,7 @@ export function Sidebar() {
   ];
 
   return (
-    <aside className="w-60 bg-white border-r border-zinc-200 min-h-[calc(100vh-3.5rem)] p-4 flex flex-col gap-6 shrink-0">
+    <aside className="sticky top-14 self-start h-[calc(100vh-3.5rem)] w-60 overflow-y-auto bg-white border-r border-zinc-200 p-4 flex flex-col gap-6 shrink-0">
       <div>
         <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-2 px-2.5">
           Workspace

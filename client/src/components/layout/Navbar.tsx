@@ -18,7 +18,7 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-30 w-full bg-white border-b border-zinc-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+      <div className="w-full px-4 h-14 flex items-center justify-between">
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2.5 text-zinc-900 font-semibold tracking-tight text-base hover:opacity-90 transition-opacity">
             <div className="w-7 h-7 bg-zinc-900 text-white rounded-md flex items-center justify-center">
