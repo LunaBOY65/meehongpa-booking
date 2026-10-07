@@ -25,7 +25,7 @@ export const bookingService = {
       if (params.user_id) query.append("user_id", params.user_id);
       if (params.room_id) query.append("room_id", params.room_id);
       if (params.date) query.append("date_str", params.date);
-      if (params.status) query.append("status", params.status);
+      if (params.status) query.append("booking_status", params.status);
 
       const qs = query.toString();
       if (qs) queryString = `?${qs}`;
