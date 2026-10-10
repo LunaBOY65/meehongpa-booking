@@ -14,18 +14,19 @@ import type {
 } from "@/types";
 import { Loader2, AlertCircle, Calendar, Building2 } from "lucide-react";
 
-const INITIAL_MONTH = 9;
-const INITIAL_YEAR = 2026;
-
 export default function AdminAnalyticsPage() {
+  const [initialPeriod] = useState(() => {
+    const now = new Date();
+    return { month: now.getMonth() + 1, year: now.getFullYear() };
+  });
   const [summary, setSummary] = useState<AnalyticsSummaryResponse | null>(null);
   const [utilization, setUtilization] = useState<RoomUtilizationResponse | null>(null);
   const [lockouts, setLockouts] = useState<UserLockoutItem[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [selectedRoomId, setSelectedRoomId] = useState<string>("");
 
-  const [month, setMonth] = useState<number>(INITIAL_MONTH);
-  const [year, setYear] = useState<number>(INITIAL_YEAR);
+  const [month, setMonth] = useState<number>(initialPeriod.month);
+  const [year, setYear] = useState<number>(initialPeriod.year);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,19 +38,22 @@ export default function AdminAnalyticsPage() {
       try {
         const [roomList, summaryData, lockoutData] = await Promise.all([
           roomService.getRooms(),
-          analyticsService.getSummary({ month: INITIAL_MONTH, year: INITIAL_YEAR }),
+          analyticsService.getSummary({
+            month: initialPeriod.month,
+            year: initialPeriod.year,
+          }),
           analyticsService.getUserLockouts(),
         ]);
 
-        let initialRoomId = "";
+        const activeRooms = roomList.filter((room) => room.is_active);
+        const initialRoomId = activeRooms[0]?.id ?? "";
         let utilData: RoomUtilizationResponse | null = null;
 
-        if (roomList.length > 0) {
-          initialRoomId = roomList[0].id;
+        if (initialRoomId) {
           utilData = await analyticsService.getRoomUtilization({
             room_id: initialRoomId,
-            month: INITIAL_MONTH,
-            year: INITIAL_YEAR,
+            month: initialPeriod.month,
+            year: initialPeriod.year,
           });
         }
 
@@ -76,24 +80,24 @@ export default function AdminAnalyticsPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [initialPeriod]);
 
   // User Action: When period (month/year) or selected room changes
   const handlePeriodOrRoomChange = async (newMonth: number, newYear: number, newRoomId: string) => {
     setLoading(true);
     setError(null);
     try {
-      const summaryData = await analyticsService.getSummary({ month: newMonth, year: newYear });
+      const summaryPromise = analyticsService.getSummary({ month: newMonth, year: newYear });
+      const utilizationPromise = newRoomId
+        ? analyticsService.getRoomUtilization({
+            room_id: newRoomId,
+            month: newMonth,
+            year: newYear,
+          })
+        : Promise.resolve(null);
+      const [summaryData, utilData] = await Promise.all([summaryPromise, utilizationPromise]);
       setSummary(summaryData);
-
-      if (newRoomId) {
-        const utilData = await analyticsService.getRoomUtilization({
-          room_id: newRoomId,
-          month: newMonth,
-          year: newYear,
-        });
-        setUtilization(utilData);
-      }
+      setUtilization(utilData);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to update analytics for period");
     } finally {
@@ -121,7 +125,12 @@ export default function AdminAnalyticsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Facility Analytics</h1>
-          <p className="text-xs text-zinc-500 mt-0.5">Track facility occupancy, check-in completion, and penalty metrics</p>
+          <p className="text-xs text-zinc-500 mt-0.5">
+            {new Intl.DateTimeFormat("th-TH", { month: "long", year: "numeric" }).format(
+              new Date(year, month - 1, 1),
+            )}
+            {" · "}Track reservations, room occupancy, check-ins, and cancellations
+          </p>
         </div>
 
         <div className="flex items-center gap-2 bg-white p-1.5 border border-zinc-200 rounded-lg shadow-xs self-start sm:self-auto">
@@ -135,7 +144,9 @@ export default function AdminAnalyticsPage() {
             className="px-2 py-1 text-xs bg-zinc-50 border border-zinc-200 rounded text-zinc-800 focus:outline-none focus:border-zinc-900"
           >
             {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => {
-              const monthName = new Date(2026, m - 1).toLocaleString("en-US", { month: "short" });
+              const monthName = new Intl.DateTimeFormat("th-TH", {
+                month: "long",
+              }).format(new Date(2000, m - 1, 1));
               return (
                 <option key={m} value={m}>
                   {monthName}
@@ -144,12 +155,19 @@ export default function AdminAnalyticsPage() {
             })}
           </select>
 
-          <input
-            type="number"
+          <select
             value={year}
             onChange={(e) => handleYearChange(Number(e.target.value))}
-            className="w-16 px-2 py-1 text-xs bg-zinc-50 border border-zinc-200 rounded text-zinc-800 focus:outline-none focus:border-zinc-900 font-mono"
-          />
+            className="px-2 py-1 text-xs bg-zinc-50 border border-zinc-200 rounded text-zinc-800 focus:outline-none focus:border-zinc-900"
+          >
+            {Array.from({ length: 7 }, (_, index) => initialPeriod.year + 1 - index).map(
+              (availableYear) => (
+                <option key={availableYear} value={availableYear}>
+                  {availableYear}
+                </option>
+              ),
+            )}
+          </select>
         </div>
       </div>
 
@@ -170,13 +188,13 @@ export default function AdminAnalyticsPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <label className="text-xs text-zinc-500 font-medium">Facility:</label>
+            <label className="text-xs text-zinc-500 font-medium">Active room:</label>
             <select
               value={selectedRoomId}
               onChange={(e) => handleRoomSelect(e.target.value)}
               className="px-2.5 py-1.5 text-xs bg-zinc-50 border border-zinc-200 rounded-md text-zinc-900 focus:outline-none focus:border-zinc-900"
             >
-              {rooms.map((r) => (
+              {rooms.filter((room) => room.is_active).map((r) => (
                 <option key={r.id} value={r.id}>
                   {r.name} ({r.building})
                 </option>
@@ -190,8 +208,15 @@ export default function AdminAnalyticsPage() {
             <Loader2 className="w-4 h-4 animate-spin" />
             <span>Calculating utilization metrics...</span>
           </div>
-        ) : (
+        ) : selectedRoomId ? (
           <RoomUtilizationChart data={utilization} />
+        ) : (
+          <div className="rounded-lg border border-dashed border-zinc-200 p-10 text-center">
+            <p className="text-sm font-medium text-zinc-700">No active rooms available</p>
+            <p className="mt-1 text-xs text-zinc-500">
+              Activate a room to view its booking utilization.
+            </p>
+          </div>
         )}
       </div>
 

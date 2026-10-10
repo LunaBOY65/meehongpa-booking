@@ -18,7 +18,7 @@ export function AnalyticsSummaryCards({ data }: AnalyticsSummaryCardsProps) {
           </div>
         </div>
         <div className="text-2xl font-semibold tracking-tight text-zinc-900 mt-2">
-          {data?.total_reservations ?? 0}
+          {data?.total_reservations ?? "—"}
         </div>
         <div className="text-[11px] text-zinc-400 mt-1">Booked in selected period</div>
       </div>
@@ -31,7 +31,7 @@ export function AnalyticsSummaryCards({ data }: AnalyticsSummaryCardsProps) {
           </div>
         </div>
         <div className="text-2xl font-semibold tracking-tight text-zinc-900 mt-2">
-          {data?.completed_check_ins ?? 0}
+          {data?.completed_check_ins ?? "—"}
         </div>
         <div className="text-[11px] text-zinc-400 mt-1">Verified physical attendance</div>
       </div>
@@ -44,9 +44,15 @@ export function AnalyticsSummaryCards({ data }: AnalyticsSummaryCardsProps) {
           </div>
         </div>
         <div className="text-2xl font-semibold tracking-tight text-zinc-900 mt-2">
-          {data?.cancellations ?? 0}
+          {data?.cancellations ?? "—"}
         </div>
-        <div className="text-[11px] text-zinc-400 mt-1">Released prior to meeting time</div>
+        <div className="text-[11px] text-zinc-400 mt-1">
+          {!data
+            ? "Summary unavailable"
+            : data.total_reservations > 0
+              ? `${((data.cancellations / data.total_reservations) * 100).toFixed(1)}% of reservations`
+              : "No reservations in selected period"}
+        </div>
       </div>
     </div>
   );
